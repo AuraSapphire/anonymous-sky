@@ -45,14 +45,14 @@
       </aside>
 
       <main class="message-panel" id="feed">
-        <div class="panel-title"><h2>Messages</h2><span>SKY://MESSAGES</span></div>
+        <div class="panel-title"><div><h2>Messages</h2><span class="panel-path">SKY://MESSAGES</span></div><button id="randomThought" class="random-btn">☁ Surprise Me</button></div><div class="discovery"><input id="searchInput" type="search" maxlength="80" placeholder="🔍 Search the sky..."><div class="filters"><button data-filter="newest" class="active">Newest</button><button data-filter="popular">Popular</button><button data-filter="random">Random</button></div></div>
         <div id="feedGrid" class="feed-grid"></div>
       </main>
 
       <aside class="right-panel">
         <section class="widget">
           <header><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span> &nbsp; Post a Message <button>−</button><button>×</button></header>
-          <div class="post">
+          <div class="post"><div class="identity-line">Posting as <b id="identityName">Anonymous</b> · no account required</div>
             <textarea id="messageInput" maxlength="500" placeholder="Share your thoughts...&#10;(anonymous)"></textarea>
             <div class="count" id="counter">0/500</div>
             <button id="sendButton" class="send"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 5-5 3 3 2-2 4 4"/></svg></span> Send</button>
@@ -71,7 +71,7 @@
 
         <section class="widget">
           <header><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span> &nbsp; Status <button>−</button><button>×</button></header>
-          <div class="status"><div class="online"><i></i><b>Online</b><strong>2000 — ∞</strong></div><hr><p><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Users online: <b>1</b></p><p><span class="ico"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></span> &nbsp; Messages: <b>Live from Supabase</b></p></div>
+          <div class="status"><div class="online"><i></i><b>Online</b><strong>2000 — ∞</strong></div><hr><p><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Sky visitors: <b id="onlineCount">∞</b></p><p><span class="ico"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></span> &nbsp; Messages: <b id="messageCount">0</b></p></div>
         </section>
       </aside>
     </div>
