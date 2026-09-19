@@ -27,4 +27,10 @@ footer{display:flex;justify-content:space-between;width:min(1370px,94%);margin:0
 .hero-anime{display:none!important}
 .scene:before{background:linear-gradient(180deg,rgba(28,125,213,.06),rgba(110,207,255,.08) 45%,rgba(230,250,255,.12))}
 .scene:after{opacity:.08}
-@media(max-width:680px){.scene{background-position:center center;background-size:100% 100%}}
+
+/* Generated Anonymous Sky portrait artwork — phone + tablet */
+@media(max-width:1050px){
+  .scene{background-image:url("assets/mobile-generated.png");background-size:cover;background-position:center top;background-repeat:no-repeat}
+  .scene:before,.scene:after{display:none}
+}
+@media(max-width:680px){.scene{background-size:cover;background-position:center top}}
