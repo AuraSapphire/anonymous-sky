@@ -30,7 +30,7 @@ footer{display:flex;justify-content:space-between;width:min(1370px,94%);margin:0
 
 /* Generated Anonymous Sky portrait artwork — phone + tablet */
 @media(max-width:1050px){
-  .scene{background-image:url("assets/mobile-generated.png");background-size:cover;background-position:center top;background-repeat:no-repeat}
+  .scene{background-image:url("assets/mobile-generated.jpg");background-size:cover;background-position:center top;background-repeat:no-repeat}
   .scene:before,.scene:after{display:none}
 }
 @media(max-width:680px){.scene{background-size:cover;background-position:center top}}
