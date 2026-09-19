@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#7ddcff"><meta name="description" content="Anonymous messages floating through a dreamy Futiger Aero sky.">
+<title>Anonymous Sky — say what you can't</title><link rel="stylesheet" href="style.css">
+</head>
+<body><div class="sky-noise"></div>
+<header class="topbar glass"><a class="brand" href="#"><span class="brand-orb"></span>ANONYMOUS SKY</a>
+<nav><a href="#feed">Sky</a><a href="#send">Send</a><button id="musicBtn" class="icon-btn">♫</button></nav></header>
+<main>
+<section class="hero"><div class="hero-copy"><p class="eyebrow">NO ACCOUNT. NO NAME. JUST WORDS.</p><h1>Let it <span>float.</span></h1>
+<p class="lead">A quiet place for thoughts, confessions, questions and messages you don't want attached to your name.</p>
+<div class="hero-actions"><a class="btn primary" href="#send">Release a thought ↓</a><a class="btn glass-btn" href="#feed">Watch the sky</a></div>
+<div class="stats"><div><strong id="messageCount">0</strong><span>floating thoughts</span></div><div><strong>∞</strong><span>ways to say it</span></div></div></div>
+<div class="hero-art"><div class="sun"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div><div class="orb"><div class="orb-shine"></div><span>?</span></div><div class="bird b1">⌁</div><div class="bird b2">⌁</div></div></section>
+<section id="send" class="composer glass"><div><p class="eyebrow">DROP SOMETHING INTO THE SKY</p><h2>What's on your mind?</h2></div>
+<form id="messageForm"><textarea id="messageInput" maxlength="500" required placeholder="Type anonymously..."></textarea><div class="form-row"><span id="counter">0 / 500</span><button class="btn primary" type="submit">Release it ✦</button></div></form></section>
+<section id="feed" class="feed-section"><div class="section-heading"><div><p class="eyebrow">LIVE SKY</p><h2>Thoughts in the air</h2></div><button id="clearLocal" class="text-btn">Clear my local demo</button></div><div id="feedGrid" class="feed-grid"></div></section>
+</main><footer><span>ANONYMOUS SKY</span><span>Made for the thoughts you don't know where to put.</span></footer>
+<audio id="bgMusic" loop preload="none"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio><script src="app.js"></script></body></html>
