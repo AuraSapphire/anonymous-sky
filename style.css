@@ -28,3 +28,7 @@ footer{display:flex;justify-content:space-between;width:min(1370px,94%);margin:0
   .scene:before,.scene:after{display:none}
 }
 @media(max-width:680px){.scene{background-size:100% 100%;background-position:center top}}
+
+
+/* Anonymous reactions */
+.reaction-btn{border:0;background:transparent;color:#6c87aa;font:12px Nunito,Arial,sans-serif;padding:2px 8px 2px 0;margin-right:8px;cursor:pointer;transition:transform .15s ease,color .15s ease}.reaction-btn:hover{transform:scale(1.06);color:#347dcc}.reaction-btn.reacted{color:#1877d1;font-weight:800}.reaction-btn:active{transform:scale(.94)}.reaction-btn span{margin-left:2px}
