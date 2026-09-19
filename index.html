@@ -22,21 +22,21 @@
 
   <section class="media-shell">
     <div class="shell-top">
-      <div class="top-icons"><button data-action="home">□</button><button data-action="messages">☷</button><button data-action="explore">✳</button><button data-action="music">▮</button></div>
+      <div class="top-icons"><button data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span></button><button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button><button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 7.2L21 12l-7.2 1.8L12 21l-1.8-7.2L3 12l7.2-2.8z"/></svg></span></button><button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span></button></div>
       <div class="window-actions"><button>−</button><button>□</button><button>×</button></div>
     </div>
 
     <div class="app-body">
       <aside class="left-panel">
         <nav>
-          <button class="active" data-action="home"><b>⌂</b>Home</button>
-          <button data-action="messages"><b>☁</b>Messages</button>
-          <button data-action="explore"><b>◎</b>Explore</button>
-          <button data-action="music"><b>♫</b>Music</button>
-          <button data-action="about"><b>★</b>About</button>
-        </nav>
+<button class="active" data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 4l9 7.2v8.3a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19.5z"/><path d="M9 21v-6h6v6"/></svg></span><span>Home</span></button>
+<button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v10H9l-5 4z"/></svg></span><span>Messages</span></button>
+<button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><span>Explore</span></button>
+<button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span><span>Music</span></button>
+<button data-action="about"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span>About</span></button>
+</nav>
         <div class="album-card">
-          <div class="album-picture">☁<span>☼</span></div>
+          <div class="album-picture"><span class="album-cloud">☁</span><span>☼</span></div>
           <b>Anonymous Sky</b><small>v1.0.0</small>
           <p>A place for<br>anonymous thoughts.</p>
           <p>No identities.<br>Just thoughts.</p>
@@ -51,18 +51,18 @@
 
       <aside class="right-panel">
         <section class="widget">
-          <header>▣ &nbsp; Post a Message <button>−</button><button>×</button></header>
+          <header><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span> &nbsp; Post a Message <button>−</button><button>×</button></header>
           <div class="post">
             <textarea id="messageInput" maxlength="500" placeholder="Share your thoughts...&#10;(anonymous)"></textarea>
             <div class="count" id="counter">0/500</div>
-            <button id="sendButton" class="send">Send</button>
+            <button id="sendButton" class="send"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 5-5 3 3 2-2 4 4"/></svg></span> Send</button>
           </div>
         </section>
 
         <section class="widget">
-          <header>♫ &nbsp; Now Playing <button>−</button><button>×</button></header>
+          <header><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Now Playing <button>−</button><button>×</button></header>
           <div class="now">
-            <div class="music-icon">♫</div><div><b>Mass Anasthesia.mp3</b><small>Unknown Artist</small></div>
+            <div class="music-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div><div><b>Mass Anasthesia.mp3</b><small>Unknown Artist</small></div>
             <div class="progress"><i id="progressBar"></i></div>
             <div class="time"><span>00:00</span><span id="duration">--:--</span></div>
             <div class="controls"><button id="prevBtn">|◀</button><button id="playBtn">▶</button><button id="nextBtn">▶|</button><span>⌕</span><input id="volume" type="range" min="0" max="1" step=".01" value=".7"></div>
@@ -70,8 +70,8 @@
         </section>
 
         <section class="widget">
-          <header>◉ &nbsp; Status <button>−</button><button>×</button></header>
-          <div class="status"><div class="online"><i></i><b>Online</b><strong>2000 — ∞</strong></div><hr><p>♫ &nbsp; Users online: <b>1</b></p><p>▤ &nbsp; Messages: <b>Live from Supabase</b></p></div>
+          <header><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span> &nbsp; Status <button>−</button><button>×</button></header>
+          <div class="status"><div class="online"><i></i><b>Online</b><strong>2000 — ∞</strong></div><hr><p><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Users online: <b>1</b></p><p><span class="ico"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></span> &nbsp; Messages: <b>Live from Supabase</b></p></div>
         </section>
       </aside>
     </div>
@@ -82,7 +82,7 @@
         <button id="mainPlay">▶</button><button id="mainStop">■</button><button id="mainPrev">|◀</button><button id="mainNext">▶|</button><button id="mainMute">⌕</button>
         <div class="bottom-seek"><i id="mainProgress"></i></div><input id="mainVolume" type="range" min="0" max="1" step=".01" value=".7">
       </div>
-      <div class="bottom-right">▣　□　♢</div>
+      <div class="bottom-right"><span class="windows-logo">⊞</span><span>□</span><span>♧</span></div>
     </div>
   </section>
 </div>
