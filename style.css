@@ -24,7 +24,7 @@ footer{display:flex;justify-content:space-between;width:min(1370px,94%);margin:0
 
 /* Exact uploaded artwork — show the full artwork on phone + tablet */
 @media(max-width:1050px){
-  .scene{background-color:#8edcff;background-image:url("assets/file_00000000796881f5a8d69b55db5c7aa3.png");background-size:100% 100%;background-position:center top;background-repeat:no-repeat}
+  .scene{background-color:#8edcff;background-image:url("assets/aa720727d236d9b02e7e359b0d14cd72.jpg");background-size:100% 100%;background-position:center top;background-repeat:no-repeat}
   .scene:before,.scene:after{display:none}
 }
 @media(max-width:680px){.scene{background-size:100% 100%;background-position:center top}}
