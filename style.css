@@ -22,6 +22,9 @@ footer{display:flex;justify-content:space-between;width:min(1370px,94%);margin:0
 /* Full-screen anime sky background */
 .scene{background-image:url("assets/anime-girl-bg.jpg");background-size:100% 100%;background-position:center center;background-repeat:no-repeat;background-attachment:scroll}.hero-anime{display:none!important}.scene:before{background:linear-gradient(180deg,rgba(28,125,213,.06),rgba(110,207,255,.08) 45%,rgba(230,250,255,.12))}.scene:after{opacity:.08}
 
-/* Exact uploaded artwork — scaled down so the face stays visible on phone + tablet */
-@media(max-width:1050px){.scene{background-color:#8edcff;background-image:url("assets/file_00000000796881f5a8d69b55db5c7aa3.png");background-size:82% auto;background-position:center top;background-repeat:no-repeat}.scene:before,.scene:after{display:none}}
-@media(max-width:680px){.scene{background-size:82% auto;background-position:center top}}
+/* Exact uploaded artwork — show the full artwork on phone + tablet */
+@media(max-width:1050px){
+  .scene{background-color:#8edcff;background-image:url("assets/file_00000000796881f5a8d69b55db5c7aa3.png");background-size:100% 100%;background-position:center top;background-repeat:no-repeat}
+  .scene:before,.scene:after{display:none}
+}
+@media(max-width:680px){.scene{background-size:100% 100%;background-position:center top}}
