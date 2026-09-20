@@ -88,6 +88,19 @@
 </div>
 <footer><span>☁　A BRIGHTER SKY AWAITS..</span><span>SEP 19 2026　20:45</span></footer>
 <div class="modal" id="modal"><div class="modal-box"><button id="modalClose">×</button><h2 id="modalTitle"></h2><p id="modalText"></p></div></div>
+<div class="modal gba-modal" id="gbaModal">
+  <div class="gba-window">
+    <button class="gba-close" id="gbaClose">×</button>
+    <div class="gba-title">☁ SKY://GBA PLAYER <span>GAME BOY ADVANCE</span></div>
+    <div class="gba-toolbar">
+      <label class="gba-load">📂 Load .GBA<input id="gbaRom" type="file" accept=".gba,.zip" hidden></label>
+      <button id="gbaFullscreen">⛶ Fullscreen</button>
+      <span id="gbaStatus">No game loaded</span>
+    </div>
+    <div class="gba-screen-wrap"><div id="gbaGame"></div></div>
+    <p class="gba-note">Your ROM is loaded locally in your browser and is not uploaded to Anonymous Sky.</p>
+  </div>
+</div>
 <audio id="bgMusic" loop preload="metadata"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio>
 <script src="app.js"></script>
 </body></html>
