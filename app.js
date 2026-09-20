@@ -84,3 +84,50 @@ document.getElementById("gbaFullscreen").onclick=()=>{
   const el=document.querySelector(".gba-window");
   if(document.fullscreenElement)document.exitFullscreen();else el?.requestFullscreen?.();
 };
+
+
+/* Rei-inspired voice assistant */
+const reiModal=document.getElementById("reiModal"),reiTalk=document.getElementById("reiTalk"),reiStatus=document.getElementById("reiStatus"),reiTranscript=document.getElementById("reiTranscript"),reiOrb=document.getElementById("reiOrb");
+let reiRecognition=null,reiSpeaking=false,reiReady=false;
+function reiOpen(){reiModal?.classList.add("show");if(reiTranscript)reiTranscript.textContent="Hello. I'm here.";}
+function reiClose(){reiModal?.classList.remove("show");if(reiRecognition){try{reiRecognition.stop()}catch{}}}
+function reiSpeak(text){
+  if(!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=.86;u.pitch=.92;u.volume=.9;
+  const voices=speechSynthesis.getVoices();
+  const preferred=voices.find(v=>/japanese|ja-JP/i.test(v.lang))||voices.find(v=>/female|zira|samantha|google.*english/i.test(v.name+" "+v.lang));
+  if(preferred)u.voice=preferred;
+  u.onstart=()=>{reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";};
+  u.onend=()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready.";};
+  speechSynthesis.speak(u);
+}
+function reiAnswer(text){
+  const q=text.toLowerCase();
+  if(/hello|hi|hey/.test(q))return"Hello. Welcome to Anonymous Sky.";
+  if(/who are you|your name/.test(q))return"I'm Rei. I can listen and speak with you here.";
+  if(/anonymous sky|what is this|this site/.test(q))return"This is Anonymous Sky. A place for thoughts without identities.";
+  if(/music|song/.test(q)){toggleMusic();return"Music.";}
+  if(/game|gba|pokemon|play/.test(q)){openGba();return"Opening the game player.";}
+  if(/message|post|thought/.test(q)){document.getElementById("feed")?.scrollIntoView({behavior:"smooth"});return"Messages. You can leave a thought there.";}
+  if(/thank/.test(q))return"You're welcome.";
+  if(/bye|goodbye/.test(q))return"See you somewhere in the sky.";
+  return"I heard you. You can talk to me about the sky, messages, music, or the game.";
+}
+function setupReiVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){
+    reiRecognition=new SR();reiRecognition.lang="en-US";reiRecognition.interimResults=false;reiRecognition.continuous=false;
+    reiRecognition.onstart=()=>{reiReady=true;reiOrb?.classList.add("listening");if(reiStatus)reiStatus.textContent="Listening...";};
+    reiRecognition.onresult=e=>{const text=e.results[0][0].transcript;reiTranscript.textContent="You: "+text;const answer=reiAnswer(text);setTimeout(()=>{reiTranscript.textContent=answer;reiSpeak(answer)},180);};
+    reiRecognition.onerror=e=>{reiOrb?.classList.remove("listening");if(reiStatus)reiStatus.textContent=e.error==="not-allowed"?"Microphone permission was blocked.":"I couldn't hear you.";};
+    reiRecognition.onend=()=>{reiOrb?.classList.remove("listening");if(!reiSpeaking&&reiStatus)reiStatus.textContent="Ready."};
+    reiTalk.onclick=()=>{if(reiSpeaking){speechSynthesis.cancel();return}try{reiRecognition.start()}catch{}};
+  }else{reiStatus.textContent="Voice recognition is not supported in this browser.";reiTalk.disabled=true;}
+}
+document.getElementById("reiOpen")?.addEventListener("click",reiOpen);
+document.getElementById("reiClose")?.addEventListener("click",reiClose);
+reiModal?.addEventListener("click",e=>{if(e.target===reiModal)reiClose()});
+setupReiVoice();
+window.addEventListener("load",()=>setTimeout(()=>{reiOpen();reiSpeak("Hello. Welcome to Anonymous Sky.");},700));
