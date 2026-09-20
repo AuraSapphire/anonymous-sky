@@ -86,18 +86,49 @@ document.getElementById("gbaFullscreen").onclick=()=>{
 };
 
 
-/* Rei-inspired voice assistant */
+/* Rei-inspired voice assistant — local Kokoro TTS */
 const reiModal=document.getElementById("reiModal"),reiTalk=document.getElementById("reiTalk"),reiStatus=document.getElementById("reiStatus"),reiTranscript=document.getElementById("reiTranscript"),reiOrb=document.getElementById("reiOrb");
-let reiRecognition=null,reiSpeaking=false,reiReady=false;
+let reiRecognition=null,reiSpeaking=false,reiReady=false,reiTtsPromise=null,reiAudio=null;
+
 function reiOpen(){reiModal?.classList.add("show");if(reiTranscript)reiTranscript.textContent="Hello. I'm here.";}
-function reiClose(){reiModal?.classList.remove("show");if(reiRecognition){try{reiRecognition.stop()}catch{}}}
-function reiSpeak(text){
-  text=String(text).replace(/\\bHello\\b/g,"H-hello").replace(/\\./g,"...");
-  reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";
-  return fetch("https://ffzhwsxmfxojrhszumwa.supabase.co/functions/v1/rei-tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})
-    .then(async r=>{if(!r.ok)throw Error("TTS unavailable");const blob=await r.blob(),url=URL.createObjectURL(blob),audio=new Audio(url);audio.volume=.92;audio.onended=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready."};audio.onerror=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking")};await audio.play();})
-    .catch(()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.rate=.9;u.pitch=1.22;u.volume=.9;speechSynthesis.speak(u)}if(reiStatus)reiStatus.textContent="Ready."});
+function reiClose(){reiModal?.classList.remove("show");if(reiRecognition){try{reiRecognition.stop()}catch{}}if(reiAudio){try{reiAudio.pause()}catch{}}}
+
+async function getReiTTS(){
+  if(!reiTtsPromise){
+    reiStatus.textContent="Loading cute voice model...";
+    reiTtsPromise=import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js")
+      .then(async ({KokoroTTS})=>{
+        const webgpu=!!navigator.gpu;
+        return KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX",{
+          dtype:webgpu?"fp16":"q8",
+          device:webgpu?"webgpu":"wasm"
+        });
+      })
+      .then(tts=>{reiReady=true;reiStatus.textContent="Ready.";return tts;})
+      .catch(e=>{reiTtsPromise=null;console.error("Kokoro TTS failed",e);reiStatus.textContent="Voice model could not load.";throw e});
+  }
+  return reiTtsPromise;
 }
+
+async function reiSpeak(text){
+  text=String(text).replace(/\bHello\b/g,"H-hello").replace(/\./g,"...");
+  reiSpeaking=true;reiOrb?.classList.add("speaking");reiStatus.textContent=reiReady?"Generating voice...":"Loading voice model...";
+  try{
+    const tts=await getReiTTS();
+    const audio=await tts.generate(text,{voice:"af_heart",speed:1.06});
+    const url=URL.createObjectURL(audio.toBlob());
+    if(reiAudio){try{reiAudio.pause()}catch{}}
+    reiAudio=new Audio(url);reiAudio.volume=.92;
+    reiAudio.onended=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking");reiStatus.textContent="Ready."};
+    reiAudio.onerror=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking");reiStatus.textContent="Audio playback failed."};
+    await reiAudio.play();
+  }catch(e){
+    reiSpeaking=false;reiOrb?.classList.remove("speaking");
+    if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.rate=.92;u.pitch=1.22;u.volume=.9;speechSynthesis.speak(u)}
+    reiStatus.textContent="Ready.";
+  }
+}
+
 function reiAnswer(text){
   const q=text.toLowerCase();
   if(/hello|hi|hey/.test(q))return"Hello. Welcome to Anonymous Sky.";
@@ -110,15 +141,16 @@ function reiAnswer(text){
   if(/bye|goodbye/.test(q))return"See you somewhere in the sky.";
   return"I heard you. You can talk to me about the sky, messages, music, or the game.";
 }
+
 function setupReiVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(SR){
     reiRecognition=new SR();reiRecognition.lang="en-US";reiRecognition.interimResults=false;reiRecognition.continuous=false;
-    reiRecognition.onstart=()=>{reiReady=true;reiOrb?.classList.add("listening");if(reiStatus)reiStatus.textContent="Listening...";};
+    reiRecognition.onstart=()=>{reiReady=true;reiOrb?.classList.add("listening");reiStatus.textContent="Listening...";};
     reiRecognition.onresult=e=>{const text=e.results[0][0].transcript;reiTranscript.textContent="You: "+text;const answer=reiAnswer(text);setTimeout(()=>{reiTranscript.textContent=answer;reiSpeak(answer)},180);};
-    reiRecognition.onerror=e=>{reiOrb?.classList.remove("listening");if(reiStatus)reiStatus.textContent=e.error==="not-allowed"?"Microphone permission was blocked.":"I couldn't hear you.";};
-    reiRecognition.onend=()=>{reiOrb?.classList.remove("listening");if(!reiSpeaking&&reiStatus)reiStatus.textContent="Ready."};
-    reiTalk.onclick=()=>{if(reiSpeaking){speechSynthesis.cancel();return}try{reiRecognition.start()}catch{}};
+    reiRecognition.onerror=e=>{reiOrb?.classList.remove("listening");reiStatus.textContent=e.error==="not-allowed"?"Microphone permission was blocked.":"I couldn't hear you.";};
+    reiRecognition.onend=()=>{reiOrb?.classList.remove("listening");if(!reiSpeaking)reiStatus.textContent="Ready."};
+    reiTalk.onclick=async()=>{if(reiSpeaking){reiAudio?.pause();window.speechSynthesis?.cancel();reiSpeaking=false;reiOrb?.classList.remove("speaking");reiStatus.textContent="Ready.";return}try{await getReiTTS();reiRecognition.start()}catch{}};
   }else{reiStatus.textContent="Voice recognition is not supported in this browser.";reiTalk.disabled=true;}
 }
 document.getElementById("reiOpen")?.addEventListener("click",reiOpen);
