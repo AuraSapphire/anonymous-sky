@@ -32,7 +32,7 @@ document.getElementById("modalClose").onclick=()=>document.getElementById("modal
 document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.action;if(a==="home")window.scrollTo({top:0,behavior:"smooth"});if(a==="messages")document.getElementById("feed").scrollIntoView({behavior:"smooth"});if(a==="music")toggleMusic();if(a==="explore")openGba();if(a==="about")modal("About Anonymous Sky","A small Y2K / Futiger Aero anonymous message board. No account. No profile. Just thoughts floating through the sky.")}));
 setupDiscovery();load();setInterval(load,30000);music.volume=.7;
 
-const GBA_ROM_URL="https://ffzhwsxmfxojrhszumwa.supabase.co/storage/v1/object/public/games/game.gba";
+const GBA_ROM_URL="https://ffzhwsxmfxojrhszumwa.supabase.co/storage/v1/object/public/games/Pokemon%20Adventure%20-%20Red%20Chapter%20%28Beta%2015%20%2B%20Expansion%20Fix%29.zip";
 let gbaLoaded=false,gbaRomUrl=null;
 
 function openGba(){
