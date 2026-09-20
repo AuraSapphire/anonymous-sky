@@ -93,16 +93,10 @@ function reiOpen(){reiModal?.classList.add("show");if(reiTranscript)reiTranscrip
 function reiClose(){reiModal?.classList.remove("show");if(reiRecognition){try{reiRecognition.stop()}catch{}}}
 function reiSpeak(text){
   text=String(text).replace(/\\bHello\\b/g,"H-hello").replace(/\\./g,"...");
-  if(!("speechSynthesis" in window))return;
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.rate=.91;u.pitch=1.32;u.volume=.9;
-  const voices=speechSynthesis.getVoices();
-  const preferred=voices.find(v=>/aria|jenny|samantha|zira|female|google.*english/i.test(v.name+" "+v.lang)&&/en-US|en-GB|english/i.test(v.lang+" "+v.name))||voices.find(v=>/en-US/i.test(v.lang))||voices.find(v=>/en-GB/i.test(v.lang));
-  if(preferred)u.voice=preferred;
-  u.onstart=()=>{reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";};
-  u.onend=()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready.";};
-  speechSynthesis.speak(u);
+  reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";
+  return fetch("https://ffzhwsxmfxojrhszumwa.supabase.co/functions/v1/rei-tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})
+    .then(async r=>{if(!r.ok)throw Error("TTS unavailable");const blob=await r.blob(),url=URL.createObjectURL(blob),audio=new Audio(url);audio.volume=.92;audio.onended=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready."};audio.onerror=()=>{URL.revokeObjectURL(url);reiSpeaking=false;reiOrb?.classList.remove("speaking")};await audio.play();})
+    .catch(()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.rate=.9;u.pitch=1.22;u.volume=.9;speechSynthesis.speak(u)}if(reiStatus)reiStatus.textContent="Ready."});
 }
 function reiAnswer(text){
   const q=text.toLowerCase();
