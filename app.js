@@ -33,7 +33,15 @@ document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click"
 setupDiscovery();load();setInterval(load,30000);music.volume=.7;
 
 let gbaLoaded=false,gbaRomUrl=null;
-function openGba(){document.getElementById("gbaModal").classList.add("show")}
+function openGba(){
+  const modal=document.getElementById("gbaModal");
+  modal.classList.add("show");
+  const game=document.getElementById("gbaGame");
+  if(game && !game.dataset.boot){
+    game.dataset.boot="1";
+    game.innerHTML='<div style="height:100%;min-height:260px;display:grid;place-items:center;text-align:center;padding:30px;color:#9fcfff;background:radial-gradient(circle at 50% 35%,#173d68,#071321 68%);font:700 14px monospace"><div><div style="font-size:42px;margin-bottom:12px">🎮</div><div style="font-size:18px;color:#fff">GBA EMULATOR READY</div><div style="margin-top:8px;opacity:.8">Load a .GBA ROM to start the game</div><div style="margin-top:18px;color:#6ddcff">SKY://GBA</div></div></div>';
+  }
+}
 function closeGba(){document.getElementById("gbaModal").classList.remove("show")}
 document.getElementById("gbaClose").onclick=closeGba;
 document.getElementById("gbaModal").onclick=e=>{if(e.target.id==="gbaModal")closeGba()};
@@ -61,6 +69,6 @@ document.getElementById("gbaRom").addEventListener("change",e=>{
   }
 });
 document.getElementById("gbaFullscreen").onclick=()=>{
-  const el=document.querySelector(".gba-screen-wrap");
+  const el=document.querySelector(".gba-window");
   if(document.fullscreenElement)document.exitFullscreen();else el?.requestFullscreen?.();
 };
