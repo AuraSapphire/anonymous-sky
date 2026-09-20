@@ -29,5 +29,38 @@ document.getElementById("volume").oninput=e=>music.volume=e.target.value;documen
 music.addEventListener("timeupdate",()=>{const p=music.duration?(music.currentTime/music.duration)*100:0;document.getElementById("progressBar").style.width=p+"%";document.getElementById("mainProgress").style.width=p+"%";document.querySelector(".time span").textContent=new Date(music.currentTime*1000).toISOString().slice(14,19);if(music.duration)document.getElementById("duration").textContent=new Date(music.duration*1000).toISOString().slice(14,19)});
 function modal(title,text){document.getElementById("modalTitle").textContent=title;document.getElementById("modalText").textContent=text;document.getElementById("modal").classList.add("show")}
 document.getElementById("modalClose").onclick=()=>document.getElementById("modal").classList.remove("show");document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")e.currentTarget.classList.remove("show")};
-document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.action;if(a==="home")window.scrollTo({top:0,behavior:"smooth"});if(a==="messages")document.getElementById("feed").scrollIntoView({behavior:"smooth"});if(a==="music")toggleMusic();if(a==="explore")modal("Explore","Search the sky, filter thoughts, or use Surprise Me to discover a random message.");if(a==="about")modal("About Anonymous Sky","A small Y2K / Futiger Aero anonymous message board. No account. No profile. Just thoughts floating through the sky.")}));
+document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.action;if(a==="home")window.scrollTo({top:0,behavior:"smooth"});if(a==="messages")document.getElementById("feed").scrollIntoView({behavior:"smooth"});if(a==="music")toggleMusic();if(a==="explore")openGba();if(a==="about")modal("About Anonymous Sky","A small Y2K / Futiger Aero anonymous message board. No account. No profile. Just thoughts floating through the sky.")}));
 setupDiscovery();load();setInterval(load,30000);music.volume=.7;
+
+let gbaLoaded=false,gbaRomUrl=null;
+function openGba(){document.getElementById("gbaModal").classList.add("show")}
+function closeGba(){document.getElementById("gbaModal").classList.remove("show")}
+document.getElementById("gbaClose").onclick=closeGba;
+document.getElementById("gbaModal").onclick=e=>{if(e.target.id==="gbaModal")closeGba()};
+document.getElementById("gbaRom").addEventListener("change",e=>{
+  const file=e.target.files?.[0]; if(!file)return;
+  if(gbaRomUrl)URL.revokeObjectURL(gbaRomUrl);
+  gbaRomUrl=URL.createObjectURL(file);
+  window.EJS_player="#gbaGame";
+  window.EJS_core="gba";
+  window.EJS_biosUrl="";
+  window.EJS_gameUrl=gbaRomUrl;
+  window.EJS_pathtodata="https://cdn.emulatorjs.org/latest/data/";
+  window.EJS_gameName=file.name.replace(/\.(gba|zip)$/i,"");
+  window.EJS_startOnLoaded=true;
+  window.EJS_fullscreenOnLoaded=false;
+  window.EJS_backgroundColor="#081b32";
+  document.getElementById("gbaStatus").textContent="Loading "+file.name+"...";
+  if(!gbaLoaded){
+    gbaLoaded=true;
+    const s=document.createElement("script");
+    s.src="https://cdn.emulatorjs.org/latest/data/loader.js";
+    s.onload=()=>document.getElementById("gbaStatus").textContent="Ready";
+    s.onerror=()=>document.getElementById("gbaStatus").textContent="Could not load emulator";
+    document.body.appendChild(s);
+  }
+});
+document.getElementById("gbaFullscreen").onclick=()=>{
+  const el=document.querySelector(".gba-screen-wrap");
+  if(document.fullscreenElement)document.exitFullscreen();else el?.requestFullscreen?.();
+};
