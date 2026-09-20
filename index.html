@@ -22,7 +22,7 @@
 
   <section class="media-shell">
     <div class="shell-top">
-      <div class="top-icons"><button data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span></button><button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button><button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 7.2L21 12l-7.2 1.8L12 21l-1.8-7.2L3 12l7.2-2.8z"/></svg></span></button><button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span></button></div>
+      <div class="top-icons"><button data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span></button><button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button><button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 7.2L21 12l-7.2 1.8L12 21l-1.8-7.2L3 12l7.2-2.8z"/></svg></span></button><button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span></button><button class="rei-nav" id="reiOpen" aria-label="Voice assistant"><span class="ico">◉</span></button></div>
       <div class="window-actions"><button>−</button><button>□</button><button>×</button></div>
     </div>
 
@@ -87,6 +87,17 @@
   </section>
 </div>
 <footer><span>☁　A BRIGHTER SKY AWAITS..</span><span>SEP 19 2026　20:45</span></footer>
+<div class="modal rei-modal" id="reiModal">
+  <div class="rei-window">
+    <button class="rei-close" id="reiClose">×</button>
+    <div class="rei-title">☁ SKY://REI <span>VOICE ASSISTANT</span></div>
+    <div class="rei-orb" id="reiOrb"><span>◉</span></div>
+    <div class="rei-status" id="reiStatus">Listening for the sky...</div>
+    <div class="rei-transcript" id="reiTranscript">Hello. I'm here.</div>
+    <button class="rei-talk" id="reiTalk">◉ Talk to Rei</button>
+    <p class="rei-note">Rei-inspired calm voice assistant. Voice recognition and speech stay in your browser.</p>
+  </div>
+</div>
 <div class="modal" id="modal"><div class="modal-box"><button id="modalClose">×</button><h2 id="modalTitle"></h2><p id="modalText"></p></div></div>
 <div class="modal gba-modal" id="gbaModal">
   <div class="gba-window">
