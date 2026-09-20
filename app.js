@@ -92,12 +92,13 @@ let reiRecognition=null,reiSpeaking=false,reiReady=false;
 function reiOpen(){reiModal?.classList.add("show");if(reiTranscript)reiTranscript.textContent="Hello. I'm here.";}
 function reiClose(){reiModal?.classList.remove("show");if(reiRecognition){try{reiRecognition.stop()}catch{}}}
 function reiSpeak(text){
+  text=String(text).replace(/\\bHello\\b/g,"H-hello").replace(/\\./g,"...");
   if(!("speechSynthesis" in window))return;
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.rate=.84;u.pitch=1.24;u.volume=.9;
+  u.rate=.91;u.pitch=1.32;u.volume=.9;
   const voices=speechSynthesis.getVoices();
-  const preferred=voices.find(v=>/female|samantha|zira|aria|jenny|libby|google.*english/i.test(v.name+" "+v.lang)&&/en-US|en-GB|english/i.test(v.lang+" "+v.name))||voices.find(v=>/en-US|en-GB/i.test(v.lang));
+  const preferred=voices.find(v=>/aria|jenny|samantha|zira|female|google.*english/i.test(v.name+" "+v.lang)&&/en-US|en-GB|english/i.test(v.lang+" "+v.name))||voices.find(v=>/en-US/i.test(v.lang))||voices.find(v=>/en-GB/i.test(v.lang));
   if(preferred)u.voice=preferred;
   u.onstart=()=>{reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";};
   u.onend=()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready.";};
