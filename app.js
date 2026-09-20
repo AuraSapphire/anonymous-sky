@@ -32,42 +32,54 @@ document.getElementById("modalClose").onclick=()=>document.getElementById("modal
 document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.action;if(a==="home")window.scrollTo({top:0,behavior:"smooth"});if(a==="messages")document.getElementById("feed").scrollIntoView({behavior:"smooth"});if(a==="music")toggleMusic();if(a==="explore")openGba();if(a==="about")modal("About Anonymous Sky","A small Y2K / Futiger Aero anonymous message board. No account. No profile. Just thoughts floating through the sky.")}));
 setupDiscovery();load();setInterval(load,30000);music.volume=.7;
 
+const GBA_ROM_URL="https://atuwtktnxeimwvprkdgp.supabase.co/storage/v1/object/public/games/game.gba";
 let gbaLoaded=false,gbaRomUrl=null;
+
 function openGba(){
   const modal=document.getElementById("gbaModal");
   modal.classList.add("show");
   const game=document.getElementById("gbaGame");
   if(game && !game.dataset.boot){
     game.dataset.boot="1";
-    game.innerHTML='<div style="height:100%;min-height:260px;display:grid;place-items:center;text-align:center;padding:30px;color:#9fcfff;background:radial-gradient(circle at 50% 35%,#173d68,#071321 68%);font:700 14px monospace"><div><div style="font-size:42px;margin-bottom:12px">🎮</div><div style="font-size:18px;color:#fff">GBA EMULATOR READY</div><div style="margin-top:8px;opacity:.8">Load a .GBA ROM to start the game</div><div style="margin-top:18px;color:#6ddcff">SKY://GBA</div></div></div>';
+    game.innerHTML='<div class="gba-loading"><div><div class="gba-pad">🎮</div><b>SKY://GBA</b><span>Loading game from Anonymous Sky...</span></div></div>';
+    startGba(GBA_ROM_URL,"Anonymous Sky GBA");
   }
 }
 function closeGba(){document.getElementById("gbaModal").classList.remove("show")}
 document.getElementById("gbaClose").onclick=closeGba;
 document.getElementById("gbaModal").onclick=e=>{if(e.target.id==="gbaModal")closeGba()};
-document.getElementById("gbaRom").addEventListener("change",e=>{
-  const file=e.target.files?.[0]; if(!file)return;
-  if(gbaRomUrl)URL.revokeObjectURL(gbaRomUrl);
-  gbaRomUrl=URL.createObjectURL(file);
+
+function startGba(gameUrl,name){
   window.EJS_player="#gbaGame";
   window.EJS_core="gba";
   window.EJS_biosUrl="";
-  window.EJS_gameUrl=gbaRomUrl;
+  window.EJS_gameUrl=gameUrl;
   window.EJS_pathtodata="https://cdn.emulatorjs.org/latest/data/";
-  window.EJS_gameName=file.name.replace(/\.(gba|zip)$/i,"");
+  window.EJS_gameName=name;
   window.EJS_startOnLoaded=true;
   window.EJS_fullscreenOnLoaded=false;
   window.EJS_backgroundColor="#081b32";
-  document.getElementById("gbaStatus").textContent="Loading "+file.name+"...";
+  document.getElementById("gbaStatus").textContent="Loading "+name+"...";
   if(!gbaLoaded){
     gbaLoaded=true;
     const s=document.createElement("script");
     s.src="https://cdn.emulatorjs.org/latest/data/loader.js";
-    s.onload=()=>document.getElementById("gbaStatus").textContent="Ready";
+    s.onload=()=>document.getElementById("gbaStatus").textContent="Emulator ready";
     s.onerror=()=>document.getElementById("gbaStatus").textContent="Could not load emulator";
     document.body.appendChild(s);
   }
+}
+
+document.getElementById("gbaRom").addEventListener("change",e=>{
+  const file=e.target.files?.[0]; if(!file)return;
+  if(gbaRomUrl)URL.revokeObjectURL(gbaRomUrl);
+  gbaRomUrl=URL.createObjectURL(file);
+  const game=document.getElementById("gbaGame");
+  game.dataset.boot="1";
+  game.innerHTML="";
+  startGba(gbaRomUrl,file.name.replace(/\\.(gba|zip)$/i,""));
 });
+
 document.getElementById("gbaFullscreen").onclick=()=>{
   const el=document.querySelector(".gba-window");
   if(document.fullscreenElement)document.exitFullscreen();else el?.requestFullscreen?.();
