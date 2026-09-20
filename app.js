@@ -95,9 +95,9 @@ function reiSpeak(text){
   if(!("speechSynthesis" in window))return;
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.rate=.86;u.pitch=.92;u.volume=.9;
+  u.rate=.88;u.pitch=1.16;u.volume=.9;
   const voices=speechSynthesis.getVoices();
-  const preferred=voices.find(v=>/japanese|ja-JP/i.test(v.lang))||voices.find(v=>/female|zira|samantha|google.*english/i.test(v.name+" "+v.lang));
+  const preferred=voices.find(v=>/ja-JP|japanese/i.test(v.lang+" "+v.name))||voices.find(v=>/female|zira|samantha|nanami|haruka|kyoko|google.*english/i.test(v.name+" "+v.lang));
   if(preferred)u.voice=preferred;
   u.onstart=()=>{reiSpeaking=true;reiOrb?.classList.add("speaking");if(reiStatus)reiStatus.textContent="Speaking...";};
   u.onend=()=>{reiSpeaking=false;reiOrb?.classList.remove("speaking");if(reiStatus)reiStatus.textContent="Ready.";};
@@ -118,7 +118,7 @@ function reiAnswer(text){
 function setupReiVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(SR){
-    reiRecognition=new SR();reiRecognition.lang="en-US";reiRecognition.interimResults=false;reiRecognition.continuous=false;
+    reiRecognition=new SR();reiRecognition.lang="ja-JP";reiRecognition.interimResults=false;reiRecognition.continuous=false;
     reiRecognition.onstart=()=>{reiReady=true;reiOrb?.classList.add("listening");if(reiStatus)reiStatus.textContent="Listening...";};
     reiRecognition.onresult=e=>{const text=e.results[0][0].transcript;reiTranscript.textContent="You: "+text;const answer=reiAnswer(text);setTimeout(()=>{reiTranscript.textContent=answer;reiSpeak(answer)},180);};
     reiRecognition.onerror=e=>{reiOrb?.classList.remove("listening");if(reiStatus)reiStatus.textContent=e.error==="not-allowed"?"Microphone permission was blocked.":"I couldn't hear you.";};
