@@ -113,5 +113,22 @@
   </div>
 </div>
 <audio id="bgMusic" loop preload="metadata"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio>
-<script src="app.js"></script>
+<script>
+window.addEventListener("load",()=>{
+  const a=document.getElementById("siteIntroAudio");
+  if(!a)return;
+  const start=()=>{
+    a.currentTime=0;
+    a.play().catch(()=>{});
+    window.removeEventListener("pointerdown",start);
+    window.removeEventListener("keydown",start);
+    window.removeEventListener("touchstart",start);
+  };
+  a.play().catch(()=>{
+    window.addEventListener("pointerdown",start,{once:true});
+    window.addEventListener("keydown",start,{once:true});
+    window.addEventListener("touchstart",start,{once:true});
+  });
+});
+</script><script src="app.js"></script>
 </body></html>
