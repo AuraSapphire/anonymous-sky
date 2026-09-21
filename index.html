@@ -205,6 +205,24 @@ document.getElementById("modal")?.addEventListener("click",e=>{if(e.target.id===
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 window.addEventListener("error",e=>{console.error("MIZOBOARD runtime error:",e.error||e.message);});
 window.addEventListener("unhandledrejection",e=>{console.error("MIZOBOARD promise error:",e.reason);});
+function installEarlyPopupHandlers(){
+ document.addEventListener("click",function(e){
+  const target=e.target.closest("#anonymousPostBtn,[data-action]");
+  if(!target)return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if(target.id==="anonymousPostBtn"){openCompose();return;}
+  const action=target.dataset.action;
+  if(action==="login")return openAuth("login");
+  if(action==="register")return openAuth("register");
+  if(action==="account")return openAccount();
+  if(action==="privacy")return openModal("PRIVACY","<p>Your account email and password are handled by Supabase Auth. MIZOBOARD stores only the profile information needed for the community experience. Never post private information publicly.</p>");
+  if(action==="terms")return openModal("TERMS","<p>Be respectful. No spam, threats, harassment, impersonation, or private information. Community content may be moderated.</p>");
+  if(action==="contact")return openModal("CONTACT","<p>Add your public contact address here before launch.</p>");
+  if(action==="logout"&&window.supabaseClientForPopup)return window.supabaseClientForPopup.auth.signOut();
+ },true);
+}
+installEarlyPopupHandlers();
 
 let liveForums=[...forums];
 async function loadForumOverview(){
@@ -352,6 +370,7 @@ function openCompose(){
 }
 
 const supabase=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+window.supabaseClientForPopup=supabase;
 if(!supabase)console.error("MIZOBOARD: Supabase client failed to load. UI popups remain available, database features may be unavailable.");
 let currentSession=null,currentProfile=null;
 function authErrorMessage(err){
