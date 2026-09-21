@@ -97,6 +97,50 @@
     <div id="topicRows"></div>
   </div>
 </section>
+
+<section id="topicPage" class="forum-page is-hidden">
+  <div class="forum-breadcrumb"><button id="topicBack">← BACK TO FORUM</button><span>MIZOBOARD</span><b>›</b><strong id="topicPageForum">Technology</strong></div>
+  <div class="thread-layout">
+    <article class="thread-shell panel">
+      <div class="thread-header">
+        <div>
+          <div class="forum-kicker">// TOPIC</div>
+          <h2 id="topicPageTitle">Topic</h2>
+          <div class="thread-submeta" id="topicPageMeta"></div>
+        </div>
+        <div class="thread-actions" id="topicPageActions"></div>
+      </div>
+      <div id="topicPageBody"></div>
+      <div class="thread-replies-head"><span>// REPLIES</span><span id="topicReplyCount">0 replies</span></div>
+      <div id="topicPageReplies"></div>
+      <div id="topicReplyComposer"></div>
+    </article>
+  </div>
+</section>
+
+<section id="composePage" class="forum-page is-hidden">
+  <div class="forum-breadcrumb"><button id="composeBack">← BACK TO FORUM</button><span>MIZOBOARD</span><b>›</b><strong id="composeForumName">Technology</strong></div>
+  <div class="compose-shell panel">
+    <div class="forum-kicker">// NEW TOPIC</div>
+    <h2>Start a new conversation</h2>
+    <p class="muted">Post into <b id="composeForumLabel">Technology</b>. Keep it clear, useful, and on-topic.</p>
+    <label>Topic title</label>
+    <input id="newTopicTitle" class="field" maxlength="120" placeholder="What do you want to talk about?">
+    <label>Topic type</label>
+    <select id="newTopicType" class="field">
+      <option value="discussion">Discussion</option>
+      <option value="guide">Guide</option>
+      <option value="help">Help</option>
+      <option value="hardware">Hardware</option>
+      <option value="software">Software</option>
+      <option value="mobile">Mobile</option>
+      <option value="other">Other</option>
+    </select>
+    <label>Post</label>
+    <textarea id="newTopicBody" class="field area" maxlength="5000" placeholder="Write your post..."></textarea>
+    <div class="compose-footer"><span class="muted">Up to 5,000 characters.</span><button class="primary" id="publishTopicPage">PUBLISH TOPIC</button></div>
+  </div>
+</section>
 </main>
 
 <aside class="right">
@@ -197,14 +241,35 @@ async function openThread(t){
  if(visitorId){await supabase.from("forum_topic_views").upsert({topic_id:id,viewer_id:visitorId},{onConflict:"topic_id,viewer_id",ignoreDuplicates:true});}
  const {data:replies,error}=await supabase.from("forum_replies").select("id,body,author_username,created_at").eq("topic_id",id).order("created_at",{ascending:true});
  if(error)return toast("Could not load replies.");
- const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p><button class='link-btn reply-report' data-reply-id='"+r.id+"'>report</button></div>").join("");
- openModal(t[0],"<div class='thread-meta'>"+currentForum+" · started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+"</div><div class='thread-post'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div><div id='threadReplies'>"+replyHtml+"</div>"+(t[7]?"<p class='muted'>This topic is locked.</p>":"<button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>")+" <button class='secondary' id='reportTopic'>REPORT</button>");
- document.getElementById("watchTopic")?.addEventListener("click",()=>{const w=JSON.parse(localStorage.getItem("watchedTopics")||"[]");if(!w.includes(id))w.push(id);localStorage.setItem("watchedTopics",JSON.stringify(w));toast("Topic added to your watch list.")});
- document.getElementById("replyTopic")?.addEventListener("click",()=>openReply(id));
- document.getElementById("reportTopic")?.addEventListener("click",()=>openReport("topic",id));
- document.querySelectorAll(".reply-report").forEach(b=>b.onclick=()=>openReport("reply",Number(b.dataset.replyId)));
+ document.getElementById("home").classList.add("is-hidden");
+ document.getElementById("forumPage").classList.add("is-hidden");
+ document.getElementById("composePage").classList.add("is-hidden");
+ document.getElementById("topicPage").classList.remove("is-hidden");
+ document.getElementById("topicPageForum").textContent=currentForum;
+ document.getElementById("topicPageTitle").textContent=t[0];
+ document.getElementById("topicPageMeta").innerHTML="Started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+" · "+(t[2]||0)+" views";
+ document.getElementById("topicPageBody").innerHTML="<div class='thread-post thread-original'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div>";
+ document.getElementById("topicReplyCount").textContent=(replies||[]).length+" repl"+((replies||[]).length===1?"y":"ies");
+ document.getElementById("topicPageReplies").innerHTML=(replies||[]).map(r=>"<div class='thread-post'><div><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small></div><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p><button class='link-btn reply-report' data-reply-id='"+r.id+"'>report</button></div>").join("")||"<div class='empty-topics'>No replies yet. Start the conversation.</div>";
+ document.getElementById("topicPageActions").innerHTML=(t[7]?"<span class='topic-lock'>LOCKED</span>":"<button class='primary' id='topicReplyButton'>REPLY</button>")+" <button class='secondary inline-btn' id='topicWatchButton'>WATCH</button> <button class='secondary inline-btn' id='topicReportButton'>REPORT</button>";
+ document.getElementById("topicReplyComposer").innerHTML="";
+ document.getElementById("topicReplyButton")?.addEventListener("click",()=>showReplyComposer(id));
+ document.getElementById("topicWatchButton")?.addEventListener("click",()=>{const w=JSON.parse(localStorage.getItem("watchedTopics")||"[]");if(!w.includes(id))w.push(id);localStorage.setItem("watchedTopics",JSON.stringify(w));toast("Topic added to your watch list.")});
+ document.getElementById("topicReportButton").onclick=()=>openReport("topic",id);
+ document.querySelectorAll("#topicPage .reply-report").forEach(b=>b.onclick=()=>openReport("reply",Number(b.dataset.replyId)));
+ window.scrollTo({top:0,behavior:"smooth"});
 }
-function openReport(type,id){
+function showReplyComposer(id){
+ if(!currentSession)return openAuth("login");
+ const box=document.getElementById("topicReplyComposer");
+ box.innerHTML="<div class='reply-composer'><div class='forum-kicker'>// REPLY</div><textarea id='pageReplyText' class='field area' maxlength='3000' placeholder='Write a reply...'></textarea><div class='compose-footer'><span class='muted'>3,000 character limit.</span><button class='primary' id='pageSendReply'>POST REPLY</button></div></div>";
+ document.getElementById("pageSendReply").onclick=async()=>{
+   const body=document.getElementById("pageReplyText").value.trim();if(!body)return toast("Write a reply first.");
+   const {error}=await supabase.from("forum_replies").insert({topic_id:id,body,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});
+   if(error)return toast(authErrorMessage(error));
+   toast("Reply posted.");await loadForumTopics(currentForum,currentForumPage);const fresh=currentForumRows.find(x=>x.id===id);if(fresh)await openThread([fresh.title,0,fresh.forum_topic_views?.[0]?.count||0,fresh.author_username,fresh.created_at,id,fresh.body,fresh.locked]);
+ };
+}function openReport(type,id){
  if(!currentSession)return openAuth("login");
  openModal("Report "+type,"<p class='muted'>Help keep MIZOBOARD clean. Reports are reviewed by moderators.</p><label>Reason</label><select id='reportReason' class='field'><option value='spam'>Spam</option><option value='harassment'>Harassment</option><option value='sexual'>Sexual content</option><option value='threat'>Threat</option><option value='personal_info'>Private information</option><option value='other'>Other</option></select><textarea id='reportDetails' class='field area' maxlength='500' placeholder='Optional details...'></textarea><button class='primary' id='sendReport'>SUBMIT REPORT</button>");
  document.getElementById("sendReport").onclick=async()=>{const reason=document.getElementById("reportReason").value,details=document.getElementById("reportDetails").value.trim(),payload={reporter_id:currentSession.user.id,reason,details};payload[type==="topic"?"topic_id":"reply_id"]=id;const {error}=await supabase.from("forum_reports").insert(payload);if(error)return toast(authErrorMessage(error));toast("Report submitted.");closeModal()};
@@ -220,10 +285,13 @@ function openReply(id){
  };
 }
 async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0],1);const {count}=await supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]);document.getElementById("forumTopicCount").textContent=(count??0).toLocaleString()+" topics";const {count:rc}=await supabase.from("forum_replies").select("id",{count:"exact",head:true});document.getElementById("forumPostCount").textContent=(rc??0).toLocaleString()+" posts"}
-document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
+document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
+document.getElementById("topicBack").onclick=()=>{document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});loadForumTopics(currentForum,currentForumPage)};
+document.getElementById("composeBack").onclick=()=>{document.getElementById("composePage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"})};
 document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();currentForumFilter=document.getElementById("forumSearchInput").value.trim();currentForumPage=1;renderTopics(currentForum,currentForumFilter);renderPagination()};
 document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(b.textContent+" selected.");});
-document.getElementById("newForumTopic").onclick=()=>{if(!currentSession)return openAuth("login");openModal("New topic","<input id='newTopicTitle' class='field' maxlength='120' placeholder='topic title'><textarea id='newTopicBody' class='field area' maxlength='5000' placeholder='write your post...'></textarea><button class='primary' id='publish'>PUBLISH TOPIC</button>');document.getElementById("publish").onclick=async()=>{const title=document.getElementById("newTopicTitle").value.trim(),body=document.getElementById("newTopicBody").value.trim();if(title.length<3)return toast("Topic title is too short.");if(!body)return toast("Write your post first.");const {error}=await supabase.from("forum_topics").insert({forum:currentForum,title,body,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});if(error)return toast(authErrorMessage(error));toast("Topic published.");closeModal();await loadForumTopics(currentForum);};};
+document.getElementById("newForumTopic").onclick=()=>{if(!currentSession)return openAuth("login");document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("composePage").classList.remove("is-hidden");document.getElementById("composeForumName").textContent=currentForum;document.getElementById("composeForumLabel").textContent=currentForum;document.getElementById("newTopicTitle").value="";document.getElementById("newTopicBody").value="";document.getElementById("newTopicType").value="discussion";window.scrollTo({top:0,behavior:"smooth"})};
+document.getElementById("publishTopicPage").onclick=async()=>{const title=document.getElementById("newTopicTitle").value.trim(),body=document.getElementById("newTopicBody").value.trim(),topic_type=document.getElementById("newTopicType").value;if(title.length<3)return toast("Topic title is too short.");if(!body)return toast("Write your post first.");const {error}=await supabase.from("forum_topics").insert({forum:currentForum,title,body,topic_type,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});if(error)return toast(authErrorMessage(error));toast("Topic published.");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");await loadForumTopics(currentForum,1);};
 renderForums(forums);
 document.querySelectorAll("#forumRows .forum-row").forEach(r=>r.onclick=()=>{const f=forums.find(x=>x[0]===r.dataset.forum);if(f)openForum(f)});
 
