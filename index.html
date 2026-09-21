@@ -125,6 +125,7 @@ const forums=[
 ["Creative Corner","Art, writing, music, projects.","4,389","31,776","Re: My latest artwork!","rui","2 hours ago"],
 ["Off-Topic","For the random stuff.","15,672","120,441","Re: Random thoughts...","mizu","3 hours ago"]
 ];
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const rows=document.getElementById("forumRows");
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.__t);window.__t=setTimeout(()=>t.classList.remove("show"),2100)}
 function openModal(title,html){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=html;document.getElementById("modal").classList.add("show")}
@@ -164,7 +165,7 @@ async function loadSiteStats(){
 async function loadForumTopics(name,page=1){
  currentForum=name;currentForumPage=Math.max(1,page);
  const from=(currentForumPage-1)*FORUM_PAGE_SIZE,to=from+FORUM_PAGE_SIZE-1;
- const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
+ const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked,forum_replies(count)",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
  if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];currentForumPages=1;renderTopics(name);return}
  currentForumRows=data||[];currentForumPages=Math.max(1,Math.ceil((count||0)/FORUM_PAGE_SIZE));renderTopics(name,currentForumFilter);renderPagination();
 }
@@ -186,7 +187,7 @@ const seedTopics={
  "Off-Topic":[["Random thoughts...","mizu","3 hours ago"],["What did you do today?","starrysky","6 hours ago"],["Anything goes","guest_404","1 day ago"]]
 };
 function renderTopics(name,filter=""){
- const source=currentForumRows.map(t=>[t.title,0,t.views||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
+ const source=currentForumRows.map(t=>[t.title,t.forum_replies?.[0]?.count||0,t.views||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
  const data=(source.length?source:[]).filter(t=>!filter||t.slice(0,5).join(" ").toLowerCase().includes(filter.toLowerCase()));
  document.getElementById("topicRows").innerHTML=data.map((t,i)=>"<div class='topic-row' data-topic='"+i+"'><div class='topic-main'><span class='topic-icon'>▱</span><span><strong>"+esc(t[0])+"</strong><small>Started by "+esc(t[3])+"</small></span></div><div class='topic-num'>"+t[1]+"</div><div class='topic-num'>"+t[2]+"</div><div class='topic-last'><strong>"+esc(t[3])+"</strong><small>"+new Date(t[4]).toLocaleString()+"</small></div></div>").join("")||"<div class='empty-topics'>No topics yet. Be the first to start one.</div>";
  document.querySelectorAll(".topic-row").forEach(r=>r.onclick=()=>openThread(data[+r.dataset.topic]));
@@ -220,13 +221,12 @@ function openReply(id){
 }
 async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0],1);const {count}=await supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]);document.getElementById("forumTopicCount").textContent=(count??0).toLocaleString()+" topics";const {count:rc}=await supabase.from("forum_replies").select("id",{count:"exact",head:true});document.getElementById("forumPostCount").textContent=(rc??0).toLocaleString()+" posts"}
 document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
-document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();const current=document.getElementById("forumPageName").textContent;renderTopics(current,document.getElementById("forumSearchInput").value)};
+document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();currentForumFilter=document.getElementById("forumSearchInput").value.trim();currentForumPage=1;renderTopics(currentForum,currentForumFilter);renderPagination()};
 document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(b.textContent+" selected.");});
 document.getElementById("newForumTopic").onclick=()=>{if(!currentSession)return openAuth("login");openModal("New topic","<input id='newTopicTitle' class='field' maxlength='120' placeholder='topic title'><textarea id='newTopicBody' class='field area' maxlength='5000' placeholder='write your post...'></textarea><button class='primary' id='publish'>PUBLISH TOPIC</button>');document.getElementById("publish").onclick=async()=>{const title=document.getElementById("newTopicTitle").value.trim(),body=document.getElementById("newTopicBody").value.trim();if(title.length<3)return toast("Topic title is too short.");if(!body)return toast("Write your post first.");const {error}=await supabase.from("forum_topics").insert({forum:currentForum,title,body,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});if(error)return toast(authErrorMessage(error));toast("Topic published.");closeModal();await loadForumTopics(currentForum);};};
 renderForums(forums);
 document.querySelectorAll("#forumRows .forum-row").forEach(r=>r.onclick=()=>{const f=forums.find(x=>x[0]===r.dataset.forum);if(f)openForum(f)});
 
-const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const SUPABASE_URL="https://ffzhwsxmfxojrhszumwa.supabase.co";
 const SUPABASE_KEY="sb_publishable_oYyJcQpOVta7i1vstZvhzA_EfRzQNsr";
 const rest=SUPABASE_URL+"/rest/v1/messages";
@@ -235,7 +235,7 @@ let visitorId=localStorage.getItem("anonymousSkyVisitorId")||((crypto.randomUUID
 let myName=localStorage.getItem("anonymousSkyName");if(!myName){myName="Anonymous_"+String(Math.floor(Math.random()*900)+100);localStorage.setItem("anonymousSkyName",myName)}
 let allMessages=[];
 async function loadMessages(){
- try{const r=await fetch(rest+"?select=id,content,created_at,author_id&order=created_at.desc&limit=100",{headers});if(!r.ok)throw Error();allMessages=await r.json();document.getElementById("messageCount").textContent=allMessages.length;document.getElementById("onlineCount").textContent=142+Math.min(99,allMessages.length);renderLiveMessages()}
+ try{const r=await fetch(rest+"?select=id,content,created_at,author_id&order=created_at.desc&limit=100",{headers});if(!r.ok)throw Error();allMessages=await r.json();renderLiveMessages()}
  catch(e){console.error(e)}
 }
 function renderLiveMessages(){
