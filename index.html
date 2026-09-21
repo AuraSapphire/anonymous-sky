@@ -133,14 +133,54 @@ document.getElementById("modalClose").onclick=closeModal;
 document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
 
 function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+f[0]+'</strong><small>'+f[1]+'</small></span></div><div class="num">'+f[2]+'</div><div class="num">'+f[3]+'</div><div class="last"><strong>'+f[4]+'</strong>by '+f[5]+'<br>'+f[6]+'</div></div>').join("");document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
-const forumTopics={Technology:[["Best lightweight games for low-end PC?","34","1,284","neko.exe","14 minutes ago"],["Show your desktop setup!","91","4,821","starrysky","27 minutes ago"],["Linux vs Windows in 2026","58","2,110","rui","41 minutes ago"],["Phone recommendations? (2026)","22","903","yuu","1 hour ago"],["What are you currently working on?","76","3,992","aura","2 hours ago"],["AI tools that are actually useful","43","1,672","mizu","3 hours ago"],["Troubleshooting & Tech Support","127","6,301","guest_404","5 hours ago"],["Random tech news and discussions","18","744","pixel","7 hours ago"],["Programming / Coding Help","66","2,908","cyan","1 day ago"],["Share your projects!","39","1,456","sora","1 day ago"]],General:[["What are you thinking right now?","120","5,240","starrysky","2 minutes ago"],["Introduce yourself","83","3,112","mizu","1 hour ago"],["Mizoram discussion thread","64","2,481","aura","3 hours ago"]],"Anime & Manga":[["Fall 2026 anime list?","48","2,204","yuu","37 minutes ago"],["What are you watching?","91","4,892","rui","2 hours ago"],["Manga recommendations","32","1,102","sora","5 hours ago"]],"Study & School":[["Class 11 Physics Help","28","921","aura","1 hour ago"],["Exam preparation tips","44","1,733","cyan","4 hours ago"],["What are you studying tonight?","19","603","mizu","1 day ago"]],"Creative Corner":[["My latest artwork!","37","1,408","rui","2 hours ago"],["Share your music","24","812","sora","8 hours ago"],["Design feedback thread","31","1,091","aura","1 day ago"]],"Off-Topic":[["Random thoughts...","203","8,221","mizu","3 hours ago"],["What did you do today?","77","2,994","starrysky","6 hours ago"],["Anything goes","54","1,822","guest_404","1 day ago"]]};
-function renderTopics(name,filter=""){const data=(forumTopics[name]||forumTopics.Technology).filter(t=>!filter||t.join(" ").toLowerCase().includes(filter.toLowerCase()));document.getElementById("topicRows").innerHTML=data.map((t,i)=>"<div class='topic-row' data-topic='"+i+"'><div class='topic-main'><span class='topic-icon'>▱</span><span><strong>"+t[0]+"</strong><small>Started by "+t[3]+"</small></span></div><div class='topic-num'>"+t[1]+"</div><div class='topic-num'>"+t[2]+"</div><div class='topic-last'><strong>"+t[3]+"</strong><small>"+t[4]+"</small></div></div>").join("")||"<div class='empty-topics'>No topics matched your search.</div>";document.querySelectorAll(".topic-row").forEach(r=>r.onclick=()=>openThread(data[+r.dataset.topic],name))}
-function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent=f[2]+" topics";document.getElementById("forumPostCount").textContent=f[3]+" posts";renderTopics(f[0]);window.scrollTo({top:0,behavior:"smooth"})}
+const forumTopics={};
+let currentForum="Technology",currentForumRows=[];
+const seedTopics={
+ Technology:[["Best lightweight games for low-end PC?","neko.exe","14 minutes ago"],["Show your desktop setup!","starrysky","27 minutes ago"],["Linux vs Windows in 2026","rui","41 minutes ago"],["Phone recommendations? (2026)","yuu","1 hour ago"],["What are you currently working on?","aura","2 hours ago"],["AI tools that are actually useful","mizu","3 hours ago"],["Troubleshooting & Tech Support","guest_404","5 hours ago"],["Random tech news and discussions","pixel","7 hours ago"],["Programming / Coding Help","cyan","1 day ago"],["Share your projects!","sora","1 day ago"]],
+ General:[["What are you thinking right now?","starrysky","2 minutes ago"],["Introduce yourself","mizu","1 hour ago"],["Mizoram discussion thread","aura","3 hours ago"]],
+ "Anime & Manga":[["Fall 2026 anime list?","yuu","37 minutes ago"],["What are you watching?","rui","2 hours ago"],["Manga recommendations","sora","5 hours ago"]],
+ "Study & School":[["Class 11 Physics Help","aura","1 hour ago"],["Exam preparation tips","cyan","4 hours ago"],["What are you studying tonight?","mizu","1 day ago"]],
+ "Creative Corner":[["My latest artwork!","rui","2 hours ago"],["Share your music","sora","8 hours ago"],["Design feedback thread","aura","1 day ago"]],
+ "Off-Topic":[["Random thoughts...","mizu","3 hours ago"],["What did you do today?","starrysky","6 hours ago"],["Anything goes","guest_404","1 day ago"]]
+};
+async function loadForumTopics(name){
+ currentForum=name;
+ const {data,error}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked").eq("forum",name).order("created_at",{ascending:false}).limit(100);
+ if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];renderTopics(name);return}
+ currentForumRows=data||[];
+ renderTopics(name);
+}
+function renderTopics(name,filter=""){
+ const source=currentForumRows.map(t=>[t.title,0,t.views||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
+ const data=(source.length?source:[]).filter(t=>!filter||t.slice(0,5).join(" ").toLowerCase().includes(filter.toLowerCase()));
+ document.getElementById("topicRows").innerHTML=data.map((t,i)=>"<div class='topic-row' data-topic='"+i+"'><div class='topic-main'><span class='topic-icon'>▱</span><span><strong>"+esc(t[0])+"</strong><small>Started by "+esc(t[3])+"</small></span></div><div class='topic-num'>"+t[1]+"</div><div class='topic-num'>"+t[2]+"</div><div class='topic-last'><strong>"+esc(t[3])+"</strong><small>"+new Date(t[4]).toLocaleString()+"</small></div></div>").join("")||"<div class='empty-topics'>No topics yet. Be the first to start one.</div>";
+ document.querySelectorAll(".topic-row").forEach(r=>r.onclick=()=>openThread(data[+r.dataset.topic]));
+}
+async function openThread(t){
+ const id=t[5];
+ const {data:replies,error}=await supabase.from("forum_replies").select("id,body,author_username,created_at").eq("topic_id",id).order("created_at",{ascending:true});
+ if(error)return toast("Could not load replies.");
+ const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p></div>").join("");
+ openModal(t[0],"<div class='thread-meta'>"+currentForum+" · started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+"</div><div class='thread-post'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div><div id='threadReplies'>"+replyHtml+"</div>"+(t[7]?"<p class='muted'>This topic is locked.</p>":"<button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>"));
+ document.getElementById("watchTopic")?.addEventListener("click",()=>{const w=JSON.parse(localStorage.getItem("watchedTopics")||"[]");if(!w.includes(id))w.push(id);localStorage.setItem("watchedTopics",JSON.stringify(w));toast("Topic added to your watch list.")});
+ document.getElementById("replyTopic")?.addEventListener("click",()=>openReply(id));
+}
+function openReply(id){
+ openModal("Reply to topic","<textarea id='replyText' class='field area' maxlength='3000' placeholder='write your reply...'></textarea><div class='counter' id='replyCounter'>0/3000</div><button class='primary' id='sendReply'>POST REPLY</button>");
+ const ta=document.getElementById("replyText");ta.oninput=()=>document.getElementById("replyCounter").textContent=ta.value.length+"/3000";
+ document.getElementById("sendReply").onclick=async()=>{
+  if(!currentSession)return openAuth("login");
+  const body=ta.value.trim();if(!body)return toast("Write a reply first.");
+  const {error}=await supabase.from("forum_replies").insert({topic_id:id,body,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});
+  if(error)return toast(authErrorMessage(error));toast("Reply posted.");closeModal();openThread(currentForumRows.find(x=>x.id===id)&&[currentForumRows.find(x=>x.id===id).title,0,currentForumRows.find(x=>x.id===id).views||0,currentForumRows.find(x=>x.id===id).author_username,currentForumRows.find(x=>x.id===id).created_at,id,currentForumRows.find(x=>x.id===id).body,currentForumRows.find(x=>x.id===id).locked));
+ };
+}
+async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0]);document.getElementById("forumTopicCount").textContent=currentForumRows.length+" topics"}
 function openThread(t,name){openModal(t[0],"<div class='thread-meta'>"+name+" · started by <b>"+t[3]+"</b> · "+t[4]+"</div><div class='thread-post'><b>"+t[3]+"</b><p>Welcome to this MIZOBOARD discussion. This is a preview of the topic conversation. Replies and full posting can be connected to Supabase next.</p></div><button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>");document.getElementById("replyTopic").onclick=()=>openModal("Reply to topic","<textarea class='field area' placeholder='write your reply...'></textarea><button class='primary' id='sendReply'>POST REPLY</button>");document.getElementById("watchTopic").onclick=()=>toast("Topic added to your watch list.")}
 document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
 document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();const current=document.getElementById("forumPageName").textContent;renderTopics(current,document.getElementById("forumSearchInput").value)};
 document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(b.textContent+" selected.");});
-document.getElementById("newForumTopic").onclick=()=>openModal("New topic","<input class='field' placeholder='topic title'><textarea class='field area' placeholder='write your post...'></textarea><button class='primary' id='publish'>PUBLISH TOPIC</button>");
+document.getElementById("newForumTopic").onclick=()=>{if(!currentSession)return openAuth("login");openModal("New topic","<input id='newTopicTitle' class='field' maxlength='120' placeholder='topic title'><textarea id='newTopicBody' class='field area' maxlength='5000' placeholder='write your post...'></textarea><button class='primary' id='publish'>PUBLISH TOPIC</button>');document.getElementById("publish").onclick=async()=>{const title=document.getElementById("newTopicTitle").value.trim(),body=document.getElementById("newTopicBody").value.trim();if(title.length<3)return toast("Topic title is too short.");if(!body)return toast("Write your post first.");const {error}=await supabase.from("forum_topics").insert({forum:currentForum,title,body,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});if(error)return toast(authErrorMessage(error));toast("Topic published.");closeModal();await loadForumTopics(currentForum);};};
 renderForums(forums);
 document.querySelectorAll("#forumRows .forum-row").forEach(r=>r.onclick=()=>{const f=forums.find(x=>x[0]===r.dataset.forum);if(f)openForum(f)});
 
@@ -331,6 +371,6 @@ document.getElementById("localTrackBtn").onclick=()=>document.getElementById("lo
 document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
 playerPaint();loadTrack(0,false);
 
-refreshAuth();loadMessages();setInterval(loadMessages,30000);
+refreshAuth();refreshAuth();loadMessages();setInterval(loadMessages,30000);
 </script>
 </body></html>
