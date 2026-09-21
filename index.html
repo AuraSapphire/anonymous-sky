@@ -165,7 +165,7 @@ async function loadSiteStats(){
 async function loadForumTopics(name,page=1){
  currentForum=name;currentForumPage=Math.max(1,page);
  const from=(currentForumPage-1)*FORUM_PAGE_SIZE,to=from+FORUM_PAGE_SIZE-1;
- const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked,forum_replies(count)",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
+ const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked,forum_replies(count),forum_topic_views(count)",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
  if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];currentForumPages=1;renderTopics(name);return}
  currentForumRows=data||[];currentForumPages=Math.max(1,Math.ceil((count||0)/FORUM_PAGE_SIZE));renderTopics(name,currentForumFilter);renderPagination();
 }
@@ -187,15 +187,14 @@ const seedTopics={
  "Off-Topic":[["Random thoughts...","mizu","3 hours ago"],["What did you do today?","starrysky","6 hours ago"],["Anything goes","guest_404","1 day ago"]]
 };
 function renderTopics(name,filter=""){
- const source=currentForumRows.map(t=>[t.title,t.forum_replies?.[0]?.count||0,t.views||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
+ const source=currentForumRows.map(t=>[t.title,t.forum_replies?.[0]?.count||0,t.forum_topic_views?.[0]?.count||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
  const data=(source.length?source:[]).filter(t=>!filter||t.slice(0,5).join(" ").toLowerCase().includes(filter.toLowerCase()));
  document.getElementById("topicRows").innerHTML=data.map((t,i)=>"<div class='topic-row' data-topic='"+i+"'><div class='topic-main'><span class='topic-icon'>▱</span><span><strong>"+esc(t[0])+"</strong><small>Started by "+esc(t[3])+"</small></span></div><div class='topic-num'>"+t[1]+"</div><div class='topic-num'>"+t[2]+"</div><div class='topic-last'><strong>"+esc(t[3])+"</strong><small>"+new Date(t[4]).toLocaleString()+"</small></div></div>").join("")||"<div class='empty-topics'>No topics yet. Be the first to start one.</div>";
  document.querySelectorAll(".topic-row").forEach(r=>r.onclick=()=>openThread(data[+r.dataset.topic]));
 }
 async function openThread(t){
  const id=t[5];
- await supabase.from("forum_topics").update({views:(t[2]||0)+1}).eq("id",id);
- t[2]=(t[2]||0)+1;
+ if(visitorId){await supabase.from("forum_topic_views").upsert({topic_id:id,viewer_id:visitorId},{onConflict:"topic_id,viewer_id",ignoreDuplicates:true});}
  const {data:replies,error}=await supabase.from("forum_replies").select("id,body,author_username,created_at").eq("topic_id",id).order("created_at",{ascending:true});
  if(error)return toast("Could not load replies.");
  const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p></div>").join("");
