@@ -33,7 +33,37 @@ document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click"
 setupDiscovery();load();setInterval(load,30000);music.volume=.7;
 
 const GBA_ROM_URL="https://ffzhwsxmfxojrhszumwa.supabase.co/storage/v1/object/public/games/Pokemon%20Adventure%20-%20Red%20Chapter%20%28Beta%2015%20%2B%20Expansion%20Fix%29.zip";
-let gbaLoaded=false,gbaRomUrl=null;
+let gbaLoaded=false,gbaRomUrl=null,gbaZipLib=null;
+
+function setGbaStatus(text){const el=document.getElementById("gbaStatus");if(el)el.textContent=text}
+
+function loadZipLibrary(){
+  if(window.JSZip)return Promise.resolve(window.JSZip);
+  if(gbaZipLib)return gbaZipLib;
+  gbaZipLib=new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+    s.onload=()=>window.JSZip?resolve(window.JSZip):reject(new Error("JSZip did not load"));
+    s.onerror=()=>reject(new Error("Could not load ZIP support"));
+    document.head.appendChild(s);
+  });
+  return gbaZipLib;
+}
+
+async function prepareGbaUrl(source){
+  if(!/\\.zip(?:$|[?#])/i.test(source.url||"")&&!source.fileName?.toLowerCase().endsWith(".zip"))return source.url;
+  setGbaStatus("Opening game archive...");
+  const res=await fetch(source.url);
+  if(!res.ok)throw new Error("Game archive could not be downloaded ("+res.status+")");
+  const JSZip=await loadZipLibrary();
+  const zip=await JSZip.loadAsync(await res.arrayBuffer());
+  const entry=Object.values(zip.files).find(f=>/\\.gba$/i.test(f.name)&&!f.dir);
+  if(!entry)throw new Error("No .gba game was found inside the archive.");
+  const blob=await entry.async("blob");
+  if(gbaRomUrl)URL.revokeObjectURL(gbaRomUrl);
+  gbaRomUrl=URL.createObjectURL(blob);
+  return gbaRomUrl;
+}
 
 function openGba(){
   const modal=document.getElementById("gbaModal");
@@ -42,42 +72,49 @@ function openGba(){
   if(game && !game.dataset.boot){
     game.dataset.boot="1";
     game.innerHTML='<div class="gba-loading"><div><div class="gba-pad">🎮</div><b>SKY://GBA</b><span>Loading game from Anonymous Sky...</span></div></div>';
-    startGba(GBA_ROM_URL,"Anonymous Sky GBA");
+    startGba({url:GBA_ROM_URL,fileName:GBA_ROM_URL},"Anonymous Sky GBA");
   }
 }
 function closeGba(){document.getElementById("gbaModal").classList.remove("show")}
 document.getElementById("gbaClose").onclick=closeGba;
 document.getElementById("gbaModal").onclick=e=>{if(e.target.id==="gbaModal")closeGba()};
 
-function startGba(gameUrl,name){
-  window.EJS_player="#gbaGame";
-  window.EJS_core="gba";
-  window.EJS_biosUrl="";
-  window.EJS_gameUrl=gameUrl;
-  window.EJS_pathtodata="https://cdn.emulatorjs.org/latest/data/";
-  window.EJS_gameName=name;
-  window.EJS_startOnLoaded=true;
-  window.EJS_fullscreenOnLoaded=false;
-  window.EJS_backgroundColor="#081b32";
-  document.getElementById("gbaStatus").textContent="Loading "+name+"...";
-  if(!gbaLoaded){
-    gbaLoaded=true;
-    const s=document.createElement("script");
-    s.src="https://cdn.emulatorjs.org/latest/data/loader.js";
-    s.onload=()=>document.getElementById("gbaStatus").textContent="Emulator ready";
-    s.onerror=()=>document.getElementById("gbaStatus").textContent="Could not load emulator";
-    document.body.appendChild(s);
+async function startGba(source,name){
+  try{
+    setGbaStatus("Preparing "+name+"...");
+    const gameUrl=await prepareGbaUrl(source);
+    window.EJS_player="#gbaGame";
+    window.EJS_core="gba";
+    window.EJS_biosUrl="";
+    window.EJS_gameUrl=gameUrl;
+    window.EJS_pathtodata="https://cdn.emulatorjs.org/latest/data/";
+    window.EJS_gameName=name;
+    window.EJS_startOnLoaded=true;
+    window.EJS_fullscreenOnLoaded=false;
+    window.EJS_backgroundColor="#081b32";
+    setGbaStatus("Starting "+name+"...");
+    if(!gbaLoaded){
+      gbaLoaded=true;
+      const s=document.createElement("script");
+      s.src="https://cdn.emulatorjs.org/latest/data/loader.js";
+      s.onload=()=>setGbaStatus("Emulator ready");
+      s.onerror=()=>{gbaLoaded=false;setGbaStatus("Could not load emulator")};
+      document.body.appendChild(s);
+    }
+  }catch(e){
+    console.error("GBA load failed:",e);
+    setGbaStatus("GBA failed to load");
+    const game=document.getElementById("gbaGame");
+    if(game)game.innerHTML='<div class="gba-loading"><div><div class="gba-pad">⚠️</div><b>GBA LOAD ERROR</b><span>'+String(e.message||e).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))+'</span></div></div>';
   }
 }
 
-document.getElementById("gbaRom").addEventListener("change",e=>{
-  const file=e.target.files?.[0]; if(!file)return;
-  if(gbaRomUrl)URL.revokeObjectURL(gbaRomUrl);
-  gbaRomUrl=URL.createObjectURL(file);
+document.getElementById("gbaRom").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];if(!file)return;
   const game=document.getElementById("gbaGame");
   game.dataset.boot="1";
-  game.innerHTML="";
-  startGba(gbaRomUrl,file.name.replace(/\\.(gba|zip)$/i,""));
+  game.innerHTML='<div class="gba-loading"><div><div class="gba-pad">🎮</div><b>SKY://GBA</b><span>Preparing local game...</span></div></div>';
+  await startGba({url:URL.createObjectURL(file),fileName:file.name},file.name.replace(/\\.(gba|zip)$/i,""));
 });
 
 document.getElementById("gbaFullscreen").onclick=()=>{
