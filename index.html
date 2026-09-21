@@ -168,7 +168,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="modal" id="modal"><div class="modal-box"><button id="modalClose">×</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
+<div class="modal" id="modal" aria-hidden="true"><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="modalClose" type="button" aria-label="Close">×</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
 <audio id="bgMusic" preload="metadata"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio>
 <script>
 const forums=[
@@ -182,10 +182,29 @@ const forums=[
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const rows=document.getElementById("forumRows");
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.__t);window.__t=setTimeout(()=>t.classList.remove("show"),2100)}
-function openModal(title,html){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=html;document.getElementById("modal").classList.add("show")}
-function closeModal(){document.getElementById("modal").classList.remove("show")}
-document.getElementById("modalClose").onclick=closeModal;
-document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+function openModal(title,html){
+ const modal=document.getElementById("modal"),titleEl=document.getElementById("modalTitle"),body=document.getElementById("modalBody");
+ if(!modal||!titleEl||!body){console.error("MIZOBOARD modal elements are missing");return}
+ titleEl.textContent=title||"";
+ body.innerHTML=html||"";
+ modal.classList.add("show");
+ modal.style.display="grid";
+ modal.setAttribute("aria-hidden","false");
+ document.body.classList.add("modal-open");
+}
+function closeModal(){
+ const modal=document.getElementById("modal");
+ if(!modal)return;
+ modal.classList.remove("show");
+ modal.style.display="none";
+ modal.setAttribute("aria-hidden","true");
+ document.body.classList.remove("modal-open");
+}
+document.getElementById("modalClose")?.addEventListener("click",e=>{e.preventDefault();closeModal()});
+document.getElementById("modal")?.addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+window.addEventListener("error",e=>{console.error("MIZOBOARD runtime error:",e.error||e.message);});
+window.addEventListener("unhandledrejection",e=>{console.error("MIZOBOARD promise error:",e.reason);});
 
 let liveForums=[...forums];
 async function loadForumOverview(){
@@ -332,7 +351,8 @@ function openCompose(){
  document.getElementById("sendPost").onclick=async()=>{const text=ta.value.trim();if(!text)return;const r=await fetch(rest,{method:"POST",headers:{...headers,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({content:text,author_id:myName})});if(!r.ok){toast("Could not send the message.");return}toast("Message posted.");closeModal();loadMessages()}
 }
 
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const supabase=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+if(!supabase)console.error("MIZOBOARD: Supabase client failed to load. UI popups remain available, database features may be unavailable.");
 let currentSession=null,currentProfile=null;
 function authErrorMessage(err){
  const m=String(err?.message||err||"Something went wrong.");
@@ -499,7 +519,7 @@ function closeUtility(){document.getElementById("utilityPage").classList.add("is
 document.getElementById("utilityBack").onclick=closeUtility;
 document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=async e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home"){[document.getElementById("forumPage"),document.getElementById("topicPage"),document.getElementById("composePage"),document.getElementById("utilityPage")].forEach(x=>x.classList.add("is-hidden"));document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});}else if(n==="forums"){[document.getElementById("forumPage"),document.getElementById("topicPage"),document.getElementById("composePage"),document.getElementById("utilityPage")].forEach(x=>x.classList.add("is-hidden"));document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"});}else if(["members","recent","popular","rules","about","help","search"].includes(n)){await showUtilityPage(n);}});
 
-document.getElementById("anonymousPostBtn").onclick=()=>openCompose();
+document.getElementById("anonymousPostBtn")?.addEventListener("click",e=>{e.preventDefault();openCompose()});
 document.getElementById("randomThought").onclick=async()=>{
  const candidates=[];
  for(const f of liveForums){const r=await supabase.from("forum_topics").select("id,forum,title,body,author_username,created_at,views,locked,forum_replies(count),forum_topic_views(count)").eq("forum",f[0]).limit(20);if(r.data)candidates.push(...r.data);}
