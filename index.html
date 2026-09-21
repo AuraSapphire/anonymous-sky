@@ -191,7 +191,7 @@ async function loadForumOverview(){
 }
 function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+esc(f[0])+'</strong><small>'+esc(f[1])+'</small></span></div><div class="num">'+Number(f[2]).toLocaleString()+'</div><div class="num">'+Number(f[3]).toLocaleString()+'</div><div class="last"><strong>'+esc(f[4])+'</strong>by '+esc(f[5])+'<br>'+esc(f[6])+'</div></div>').join("")||'<div class="empty-topics">No forum categories available.</div>';document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
 const forumTopics={};
-let currentForum="Technology",currentForumRows=[],currentForumPage=1,currentForumPages=1,currentForumFilter="";
+let currentForum="Technology",currentForumRows=[],currentForumPage=1,currentForumPages=1,currentForumFilter="",currentForumType="all";
 const FORUM_PAGE_SIZE=10;
 async function loadSiteStats(){
  const [members,topics,posts,newest]=await Promise.all([
@@ -209,9 +209,12 @@ async function loadSiteStats(){
 async function loadForumTopics(name,page=1){
  currentForum=name;currentForumPage=Math.max(1,page);
  const from=(currentForumPage-1)*FORUM_PAGE_SIZE,to=from+FORUM_PAGE_SIZE-1;
- const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked,forum_replies(count),forum_topic_views(count)",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
- if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];currentForumPages=1;renderTopics(name);return}
- currentForumRows=data||[];currentForumPages=Math.max(1,Math.ceil((count||0)/FORUM_PAGE_SIZE));renderTopics(name,currentForumFilter);renderPagination();
+ let query=supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked,topic_type,forum_replies(count),forum_topic_views(count)",{count:"exact"}).eq("forum",name);
+ if(currentForumType!=="all")query=query.eq("topic_type",currentForumType);
+ if(currentForumFilter){const q=currentForumFilter.replace(/[,()]/g," ");query=query.or("title.ilike.%"+q+"%,body.ilike.%"+q+"%,author_username.ilike.%"+q+"%");}
+ const {data,error,count}=await query.order("created_at",{ascending:false}).range(from,to);
+ if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];currentForumPages=1;renderTopics(name);renderPagination();return}
+ currentForumRows=data||[];currentForumPages=Math.max(1,Math.ceil((count||0)/FORUM_PAGE_SIZE));renderTopics(name);renderPagination();
 }
 function renderPagination(){
  const wrap=document.getElementById("pageButtons");if(!wrap)return;
@@ -231,8 +234,8 @@ const seedTopics={
  "Off-Topic":[["Random thoughts...","mizu","3 hours ago"],["What did you do today?","starrysky","6 hours ago"],["Anything goes","guest_404","1 day ago"]]
 };
 function renderTopics(name,filter=""){
- const source=currentForumRows.map(t=>[t.title,t.forum_replies?.[0]?.count||0,t.forum_topic_views?.[0]?.count||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
- const data=(source.length?source:[]).filter(t=>!filter||t.slice(0,5).join(" ").toLowerCase().includes(filter.toLowerCase()));
+ const source=currentForumRows.map(t=>[t.title,t.forum_replies?.[0]?.count||0,t.forum_topic_views?.[0]?.count||0,t.author_username,t.created_at,t.id,t.body,t.locked,t.topic_type||"discussion"]);
+ const data=source;
  document.getElementById("topicRows").innerHTML=data.map((t,i)=>"<div class='topic-row' data-topic='"+i+"'><div class='topic-main'><span class='topic-icon'>▱</span><span><strong>"+esc(t[0])+"</strong><small>Started by "+esc(t[3])+"</small></span></div><div class='topic-num'>"+t[1]+"</div><div class='topic-num'>"+t[2]+"</div><div class='topic-last'><strong>"+esc(t[3])+"</strong><small>"+new Date(t[4]).toLocaleString()+"</small></div></div>").join("")||"<div class='empty-topics'>No topics yet. Be the first to start one.</div>";
  document.querySelectorAll(".topic-row").forEach(r=>r.onclick=()=>openThread(data[+r.dataset.topic]));
 }
@@ -284,12 +287,12 @@ function openReply(id){
   if(error)return toast(authErrorMessage(error));toast("Reply posted.");closeModal();openThread(currentForumRows.find(x=>x.id===id)&&[currentForumRows.find(x=>x.id===id).title,0,currentForumRows.find(x=>x.id===id).views||0,currentForumRows.find(x=>x.id===id).author_username,currentForumRows.find(x=>x.id===id).created_at,id,currentForumRows.find(x=>x.id===id).body,currentForumRows.find(x=>x.id===id).locked));
  };
 }
-async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0],1);const {count}=await supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]);document.getElementById("forumTopicCount").textContent=(count??0).toLocaleString()+" topics";const {count:rc}=await supabase.from("forum_replies").select("id",{count:"exact",head:true});document.getElementById("forumPostCount").textContent=(rc??0).toLocaleString()+" posts"}
+async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");currentForumType="all";currentForumFilter="";document.querySelectorAll("#forumTabs button").forEach((x,i)=>x.classList.toggle("active",i===0));document.getElementById("forumSearchInput").value="";document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0],1);const {count}=await supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]);document.getElementById("forumTopicCount").textContent=(count??0).toLocaleString()+" topics";const {count:rc}=await supabase.from("forum_replies").select("id",{count:"exact",head:true});document.getElementById("forumPostCount").textContent=(rc??0).toLocaleString()+" posts"}
 document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
 document.getElementById("topicBack").onclick=()=>{document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});loadForumTopics(currentForum,currentForumPage)};
 document.getElementById("composeBack").onclick=()=>{document.getElementById("composePage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"})};
-document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();currentForumFilter=document.getElementById("forumSearchInput").value.trim();currentForumPage=1;renderTopics(currentForum,currentForumFilter);renderPagination()};
-document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(b.textContent+" selected.");});
+document.getElementById("forumSearch").onsubmit=async e=>{e.preventDefault();currentForumFilter=document.getElementById("forumSearchInput").value.trim();currentForumPage=1;await loadForumTopics(currentForum,1)};
+document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=async()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");const map={"ALL TOPICS":"all","DISCUSSIONS":"discussion","GUIDES":"guide","HELP":"help","HARDWARE":"hardware","SOFTWARE":"software","MOBILE":"mobile","OTHER":"other"};currentForumType=map[b.textContent.trim()]||"all";currentForumPage=1;await loadForumTopics(currentForum,1)});
 document.getElementById("newForumTopic").onclick=()=>{if(!currentSession)return openAuth("login");document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("composePage").classList.remove("is-hidden");document.getElementById("composeForumName").textContent=currentForum;document.getElementById("composeForumLabel").textContent=currentForum;document.getElementById("newTopicTitle").value="";document.getElementById("newTopicBody").value="";document.getElementById("newTopicType").value="discussion";window.scrollTo({top:0,behavior:"smooth"})};
 document.getElementById("publishTopicPage").onclick=async()=>{const title=document.getElementById("newTopicTitle").value.trim(),body=document.getElementById("newTopicBody").value.trim(),topic_type=document.getElementById("newTopicType").value;if(title.length<3)return toast("Topic title is too short.");if(!body)return toast("Write your post first.");const {error}=await supabase.from("forum_topics").insert({forum:currentForum,title,body,topic_type,author_id:currentSession.user.id,author_username:currentProfile?.username||"member"});if(error)return toast(authErrorMessage(error));toast("Topic published.");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");await loadForumTopics(currentForum,1);};
 renderForums(forums);
