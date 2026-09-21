@@ -132,7 +132,19 @@ function closeModal(){document.getElementById("modal").classList.remove("show")}
 document.getElementById("modalClose").onclick=closeModal;
 document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
 
-function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+f[0]+'</strong><small>'+f[1]+'</small></span></div><div class="num">'+f[2]+'</div><div class="num">'+f[3]+'</div><div class="last"><strong>'+f[4]+'</strong>by '+f[5]+'<br>'+f[6]+'</div></div>').join("");document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
+let liveForums=[...forums];
+async function loadForumOverview(){
+ const out=await Promise.all(forums.map(async f=>{
+  const [{count:topicCount},{count:replyCount},latest]=await Promise.all([
+   supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]),
+   supabase.from("forum_replies").select("id",{count:"exact",head:true}).in("topic_id", (await supabase.from("forum_topics").select("id").eq("forum",f[0])).data?.map(x=>x.id)||[-1]),
+   supabase.from("forum_topics").select("title,author_username,created_at").eq("forum",f[0]).order("created_at",{ascending:false}).limit(1).maybeSingle()
+  ]);
+  return [f[0],f[1],topicCount||0,(topicCount||0)+(replyCount||0),latest.data?latest.data.title:"No posts yet",latest.data?latest.data.author_username:"—",latest.data?new Date(latest.data.created_at).toLocaleString():"—"];
+ }));
+ liveForums=out;renderForums(out);
+}
+function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+esc(f[0])+'</strong><small>'+esc(f[1])+'</small></span></div><div class="num">'+Number(f[2]).toLocaleString()+'</div><div class="num">'+Number(f[3]).toLocaleString()+'</div><div class="last"><strong>'+esc(f[4])+'</strong>by '+esc(f[5])+'<br>'+esc(f[6])+'</div></div>').join("")||'<div class="empty-topics">No forum categories available.</div>';document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
 const forumTopics={};
 let currentForum="Technology",currentForumRows=[],currentForumPage=1,currentForumPages=1,currentForumFilter="";
 const FORUM_PAGE_SIZE=10;
@@ -374,10 +386,10 @@ document.addEventListener("click",async e=>{
 
 document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"})}else if(n==="forums"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})}else if(n==="members")openModal("Members","<p>12,430 registered members.</p>");else if(n==="help")openModal("Help","<p>Search filters forums. Click a forum to inspect its latest topic. Anonymous posting is still available through the current app backend.</p>");else if(n==="recent")toast("Showing the newest community activity.");else if(n==="popular")toast("Popular topics loaded.");else if(n==="rules")openModal("Rules","<ol><li>Be respectful.</li><li>No spam.</li><li>No private information.</li><li>Keep the community safe.</li></ol>");else if(n==="about")openModal("About","<p>MIZOBOARD is the dark cyber-retro presentation of Anonymous Sky.</p>");else if(n==="search")document.getElementById("searchInput").focus()});
 document.getElementById("randomThought").onclick=()=>{document.getElementById("forums").scrollIntoView({behavior:"smooth"});toast("Surprise me — community activity below.");};
-function applySearch(q){q=q.toLowerCase().trim();const list=q?forums.filter(f=>(f[0]+" "+f[1]+" "+f[4]).toLowerCase().includes(q)):forums;renderForums(list);if(!list.length)rows.innerHTML='<div class="empty-topics">No forum categories matched your search.</div>';toast(q?"Search complete.":"Showing all forums.")}
+function applySearch(q){q=q.toLowerCase().trim();const list=q?liveForums.filter(f=>(f[0]+" "+f[1]+" "+f[4]+" "+f[5]).toLowerCase().includes(q)):liveForums;renderForums(list);if(!list.length)rows.innerHTML='<div class="empty-topics">No forum categories matched your search.</div>';toast(q?"Search complete.":"Showing all forums.")}
 document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();applySearch(document.getElementById("searchInput").value)}
 document.getElementById("searchFormRight").onsubmit=e=>{e.preventDefault();const q=document.getElementById("rightSearch").value;document.getElementById("searchInput").value=q;applySearch(q)}
-document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));let list=[...forums];if(b.dataset.filter==="random")list.sort(()=>Math.random()-.5);if(b.dataset.filter==="popular")list.sort((a,z)=>parseInt(z[3].replace(/,/g,""))-parseInt(a[3].replace(/,/g,"")));renderForums(list)});
+document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));let list=[...liveForums];if(b.dataset.filter==="random")list.sort(()=>Math.random()-.5);if(b.dataset.filter==="popular")list.sort((a,z)=>Number(z[3])-Number(a[3]));renderForums(list)});
 
 const music=document.getElementById("bgMusic"),playBtn=document.getElementById("playBtn"),stopBtn=document.getElementById("stopBtn"),volume=document.getElementById("volume"),seekBar=document.getElementById("seekBar");
 let playlist=[{src:"assets/alexis_gaming_cam-anime-shine-sound-effect-346114.mp3",title:"Anime Shine",artist:"MIZOBOARD"}],track=0,shuffle=false,repeat=false;
@@ -401,6 +413,6 @@ document.getElementById("localTrackBtn").onclick=()=>document.getElementById("lo
 document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
 playerPaint();loadTrack(0,false);
 
-refreshAuth();loadMessages();loadSiteStats();setInterval(()=>{loadMessages();loadSiteStats()},30000);
+refreshAuth();loadMessages();loadSiteStats();loadForumOverview();setInterval(()=>{loadMessages();loadSiteStats();loadForumOverview()},30000);
 </script>
 </body></html>
