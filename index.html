@@ -91,7 +91,7 @@
     </div>
     <form class="forum-search" id="forumSearch"><input id="forumSearchInput" type="search" placeholder="search this forum..."><button>⌕</button></form>
   </div>
-  <div class="pagination"><button>‹</button><button class="active">1</button><button>2</button><button>3</button><span>...</span><button>24</button><button>›</button></div>
+  <div class="pagination" id="pagination"><button data-page="prev">‹</button><span id="pageButtons"></span><button data-page="next">›</button></div>
   <div class="topic-table panel">
     <div class="topic-head"><div>TOPIC</div><div>REPLIES</div><div>VIEWS</div><div>LAST POST</div></div>
     <div id="topicRows"></div>
@@ -104,7 +104,7 @@
   <div class="login-box" id="accountBox"><img id="accountAvatar" src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="account"><div><b id="accountName">guest</b><small id="accountStatus">offline</small><div id="accountActions"><button data-action="login">login</button><button data-action="register">register</button></div></div></div>
  </section>
  <section class="panel"><div class="panel-title">SEARCH</div><div class="panel-pad"><form class="search-small" id="searchFormRight"><input id="rightSearch" placeholder="search..."><button>⌕</button></form></div></section>
- <section class="panel"><div class="panel-title">SITE STATS</div><div class="stats"><div>MEMBERS<b>12,430</b></div><div>TOPICS<b id="topicCount">67,191</b></div><div>POSTS<b id="messageCount">398,220</b></div><div>NEWEST<b>@starrysky</b></div></div></section>
+ <section class="panel"><div class="panel-title">SITE STATS</div><div class="stats"><div>MEMBERS<b id="memberCount">—</b></div><div>TOPICS<b id="topicCount">—</b></div><div>POSTS<b id="messageCount">—</b></div><div>NEWEST<b id="newestMember">@—</b></div></div></section>
  <section class="panel quote-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt=""><p>“A KIND COMMUNITY CAN CHANGE SOMEONE’S DAY.”</p></section>
  <section class="panel"><div class="panel-title">RANDOM</div><div class="panel-pad"><p class="random-copy">good people<br>share great things.<br>→</p></div></section>
 </aside>
@@ -134,7 +134,37 @@ document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal
 
 function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+f[0]+'</strong><small>'+f[1]+'</small></span></div><div class="num">'+f[2]+'</div><div class="num">'+f[3]+'</div><div class="last"><strong>'+f[4]+'</strong>by '+f[5]+'<br>'+f[6]+'</div></div>').join("");document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
 const forumTopics={};
-let currentForum="Technology",currentForumRows=[];
+let currentForum="Technology",currentForumRows=[],currentForumPage=1,currentForumPages=1,currentForumFilter="";
+const FORUM_PAGE_SIZE=10;
+async function loadSiteStats(){
+ const [members,topics,posts,newest]=await Promise.all([
+  supabase.from("profiles").select("id",{count:"exact",head:true}),
+  supabase.from("forum_topics").select("id",{count:"exact",head:true}),
+  supabase.from("forum_replies").select("id",{count:"exact",head:true}),
+  supabase.from("profiles").select("username,created_at").order("created_at",{ascending:false}).limit(1).maybeSingle()
+ ]);
+ document.getElementById("memberCount").textContent=(members.count??0).toLocaleString();
+ document.getElementById("topicCount").textContent=(topics.count??0).toLocaleString();
+ document.getElementById("messageCount").textContent=((posts.count??0)).toLocaleString();
+ document.getElementById("newestMember").textContent="@"+(newest.data?.username||"—");
+ document.getElementById("onlineCount").textContent="—";
+}
+async function loadForumTopics(name,page=1){
+ currentForum=name;currentForumPage=Math.max(1,page);
+ const from=(currentForumPage-1)*FORUM_PAGE_SIZE,to=from+FORUM_PAGE_SIZE-1;
+ const {data,error,count}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked",{count:"exact"}).eq("forum",name).order("created_at",{ascending:false}).range(from,to);
+ if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];currentForumPages=1;renderTopics(name);return}
+ currentForumRows=data||[];currentForumPages=Math.max(1,Math.ceil((count||0)/FORUM_PAGE_SIZE));renderTopics(name,currentForumFilter);renderPagination();
+}
+function renderPagination(){
+ const wrap=document.getElementById("pageButtons");if(!wrap)return;
+ let s="";const start=Math.max(1,currentForumPage-2),end=Math.min(currentForumPages,start+4);
+ for(let p=start;p<=end;p++)s+="<button data-page='"+p+"' class='"+(p===currentForumPage?"active":"")+"'>"+p+"</button>";
+ wrap.innerHTML=s;
+ document.querySelectorAll("#pagination [data-page]").forEach(b=>b.onclick=async()=>{const p=b.dataset.page;if(p==="prev")return currentForumPage>1&&loadForumTopics(currentForum,currentForumPage-1);if(p==="next")return currentForumPage<currentForumPages&&loadForumTopics(currentForum,currentForumPage+1);await loadForumTopics(currentForum,+p)});
+ document.getElementById("pagination").querySelector('[data-page="prev"]').disabled=currentForumPage<=1;
+ document.getElementById("pagination").querySelector('[data-page="next"]').disabled=currentForumPage>=currentForumPages;
+}
 const seedTopics={
  Technology:[["Best lightweight games for low-end PC?","neko.exe","14 minutes ago"],["Show your desktop setup!","starrysky","27 minutes ago"],["Linux vs Windows in 2026","rui","41 minutes ago"],["Phone recommendations? (2026)","yuu","1 hour ago"],["What are you currently working on?","aura","2 hours ago"],["AI tools that are actually useful","mizu","3 hours ago"],["Troubleshooting & Tech Support","guest_404","5 hours ago"],["Random tech news and discussions","pixel","7 hours ago"],["Programming / Coding Help","cyan","1 day ago"],["Share your projects!","sora","1 day ago"]],
  General:[["What are you thinking right now?","starrysky","2 minutes ago"],["Introduce yourself","mizu","1 hour ago"],["Mizoram discussion thread","aura","3 hours ago"]],
@@ -143,13 +173,6 @@ const seedTopics={
  "Creative Corner":[["My latest artwork!","rui","2 hours ago"],["Share your music","sora","8 hours ago"],["Design feedback thread","aura","1 day ago"]],
  "Off-Topic":[["Random thoughts...","mizu","3 hours ago"],["What did you do today?","starrysky","6 hours ago"],["Anything goes","guest_404","1 day ago"]]
 };
-async function loadForumTopics(name){
- currentForum=name;
- const {data,error}=await supabase.from("forum_topics").select("id,forum,title,body,author_id,author_username,created_at,views,locked").eq("forum",name).order("created_at",{ascending:false}).limit(100);
- if(error){console.error(error);toast("Could not load forum topics.");currentForumRows=[];renderTopics(name);return}
- currentForumRows=data||[];
- renderTopics(name);
-}
 function renderTopics(name,filter=""){
  const source=currentForumRows.map(t=>[t.title,0,t.views||0,t.author_username,t.created_at,t.id,t.body,t.locked]);
  const data=(source.length?source:[]).filter(t=>!filter||t.slice(0,5).join(" ").toLowerCase().includes(filter.toLowerCase()));
@@ -158,12 +181,20 @@ function renderTopics(name,filter=""){
 }
 async function openThread(t){
  const id=t[5];
+ await supabase.from("forum_topics").update({views:(t[2]||0)+1}).eq("id",id);
+ t[2]=(t[2]||0)+1;
  const {data:replies,error}=await supabase.from("forum_replies").select("id,body,author_username,created_at").eq("topic_id",id).order("created_at",{ascending:true});
  if(error)return toast("Could not load replies.");
  const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p></div>").join("");
- openModal(t[0],"<div class='thread-meta'>"+currentForum+" · started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+"</div><div class='thread-post'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div><div id='threadReplies'>"+replyHtml+"</div>"+(t[7]?"<p class='muted'>This topic is locked.</p>":"<button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>"));
+ openModal(t[0],"<div class='thread-meta'>"+currentForum+" · started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+"</div><div class='thread-post'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div><div id='threadReplies'>"+replyHtml+"</div>"+(t[7]?"<p class='muted'>This topic is locked.</p>":"<button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>")+" <button class='secondary' id='reportTopic'>REPORT</button>");
  document.getElementById("watchTopic")?.addEventListener("click",()=>{const w=JSON.parse(localStorage.getItem("watchedTopics")||"[]");if(!w.includes(id))w.push(id);localStorage.setItem("watchedTopics",JSON.stringify(w));toast("Topic added to your watch list.")});
  document.getElementById("replyTopic")?.addEventListener("click",()=>openReply(id));
+ document.getElementById("reportTopic")?.addEventListener("click",()=>openReport("topic",id));
+}
+function openReport(type,id){
+ if(!currentSession)return openAuth("login");
+ openModal("Report "+type,"<p class='muted'>Help keep MIZOBOARD clean. Reports are reviewed by moderators.</p><label>Reason</label><select id='reportReason' class='field'><option value='spam'>Spam</option><option value='harassment'>Harassment</option><option value='sexual'>Sexual content</option><option value='threat'>Threat</option><option value='personal_info'>Private information</option><option value='other'>Other</option></select><textarea id='reportDetails' class='field area' maxlength='500' placeholder='Optional details...'></textarea><button class='primary' id='sendReport'>SUBMIT REPORT</button>");
+ document.getElementById("sendReport").onclick=async()=>{const reason=document.getElementById("reportReason").value,details=document.getElementById("reportDetails").value.trim(),payload={reporter_id:currentSession.user.id,reason,details};payload[type==="topic"?"topic_id":"reply_id"]=id;const {error}=await supabase.from("forum_reports").insert(payload);if(error)return toast(authErrorMessage(error));toast("Report submitted.");closeModal()};
 }
 function openReply(id){
  openModal("Reply to topic","<textarea id='replyText' class='field area' maxlength='3000' placeholder='write your reply...'></textarea><div class='counter' id='replyCounter'>0/3000</div><button class='primary' id='sendReply'>POST REPLY</button>");
@@ -175,8 +206,7 @@ function openReply(id){
   if(error)return toast(authErrorMessage(error));toast("Reply posted.");closeModal();openThread(currentForumRows.find(x=>x.id===id)&&[currentForumRows.find(x=>x.id===id).title,0,currentForumRows.find(x=>x.id===id).views||0,currentForumRows.find(x=>x.id===id).author_username,currentForumRows.find(x=>x.id===id).created_at,id,currentForumRows.find(x=>x.id===id).body,currentForumRows.find(x=>x.id===id).locked));
  };
 }
-async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0]);document.getElementById("forumTopicCount").textContent=currentForumRows.length+" topics"}
-function openThread(t,name){openModal(t[0],"<div class='thread-meta'>"+name+" · started by <b>"+t[3]+"</b> · "+t[4]+"</div><div class='thread-post'><b>"+t[3]+"</b><p>Welcome to this MIZOBOARD discussion. This is a preview of the topic conversation. Replies and full posting can be connected to Supabase next.</p></div><button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>");document.getElementById("replyTopic").onclick=()=>openModal("Reply to topic","<textarea class='field area' placeholder='write your reply...'></textarea><button class='primary' id='sendReply'>POST REPLY</button>");document.getElementById("watchTopic").onclick=()=>toast("Topic added to your watch list.")}
+async function openForum(f){document.getElementById("home").classList.add("is-hidden");document.getElementById("forumPage").classList.remove("is-hidden");document.getElementById("forumPageName").textContent=f[0];document.getElementById("forumPageTitle").textContent=f[0];document.getElementById("forumPageDesc").textContent=f[1];document.getElementById("forumTopicCount").textContent="loading topics...";document.getElementById("forumPostCount").textContent=f[3]+" posts";window.scrollTo({top:0,behavior:"smooth"});await loadForumTopics(f[0],1);const {count}=await supabase.from("forum_topics").select("id",{count:"exact",head:true}).eq("forum",f[0]);document.getElementById("forumTopicCount").textContent=(count??0).toLocaleString()+" topics";const {count:rc}=await supabase.from("forum_replies").select("id",{count:"exact",head:true});document.getElementById("forumPostCount").textContent=(rc??0).toLocaleString()+" posts"}
 document.getElementById("forumBack").onclick=()=>{document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})};
 document.getElementById("forumSearch").onsubmit=e=>{e.preventDefault();const current=document.getElementById("forumPageName").textContent;renderTopics(current,document.getElementById("forumSearchInput").value)};
 document.querySelectorAll("#forumTabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#forumTabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");toast(b.textContent+" selected.");});
@@ -371,6 +401,6 @@ document.getElementById("localTrackBtn").onclick=()=>document.getElementById("lo
 document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
 playerPaint();loadTrack(0,false);
 
-refreshAuth();refreshAuth();loadMessages();setInterval(loadMessages,30000);
+refreshAuth();loadMessages();loadSiteStats();setInterval(()=>{loadMessages();loadSiteStats()},30000);
 </script>
 </body></html>
