@@ -34,8 +34,8 @@ document.addEventListener("click",e=>{
  if(e.target===M()){hide();return}
  const a=e.target.closest("[data-action]");
  if(a){e.preventDefault();e.stopImmediatePropagation();const x=a.dataset.action;
-  if(x==="login"&&typeof window.openAuth==="function")return window.openAuth("login");
-  if(x==="register"&&typeof window.openAuth==="function")return window.openAuth("register");
+  if(x==="login")return typeof window.openAuth==="function"?window.openAuth("login"):authFallback("login");
+  if(x==="register")return typeof window.openAuth==="function"?window.openAuth("register"):authFallback("register");
   if(x==="account"&&typeof window.openAccount==="function")return window.openAccount();
   if(x==="logout"&&window.supabaseClientForPopup)return window.supabaseClientForPopup.auth.signOut();
   if(x==="terms")return show("TERMS","<p>Be respectful. No spam, threats, harassment, impersonation, or private information.</p>");
