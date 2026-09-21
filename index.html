@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MIZOBOARD — Anonymous Sky</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="site">
@@ -100,7 +101,7 @@
 
 <aside class="right">
  <section class="panel">
-  <div class="login-box"><img src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="guest"><div><b>guest</b><small>offline</small><div><button data-action="login">login</button><button data-action="register">register</button></div></div></div>
+  <div class="login-box" id="accountBox"><img id="accountAvatar" src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="account"><div><b id="accountName">guest</b><small id="accountStatus">offline</small><div id="accountActions"><button data-action="login">login</button><button data-action="register">register</button></div></div></div>
  </section>
  <section class="panel"><div class="panel-title">SEARCH</div><div class="panel-pad"><form class="search-small" id="searchFormRight"><input id="rightSearch" placeholder="search..."><button>⌕</button></form></div></section>
  <section class="panel"><div class="panel-title">SITE STATS</div><div class="stats"><div>MEMBERS<b>12,430</b></div><div>TOPICS<b id="topicCount">67,191</b></div><div>POSTS<b id="messageCount">398,220</b></div><div>NEWEST<b>@starrysky</b></div></div></section>
@@ -167,7 +168,140 @@ function openCompose(){
  const ta=document.getElementById("postText");ta.oninput=()=>document.getElementById("pc").textContent=ta.value.length+"/500";
  document.getElementById("sendPost").onclick=async()=>{const text=ta.value.trim();if(!text)return;const r=await fetch(rest,{method:"POST",headers:{...headers,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({content:text,author_id:myName})});if(!r.ok){toast("Could not send the message.");return}toast("Message posted.");closeModal();loadMessages()}
 }
-document.addEventListener("click",e=>{const a=e.target.closest("[data-action]");if(!a)return;e.preventDefault();const x=a.dataset.action;if(x==="login"||x==="register"){openModal(x==="login"?"Login":"Register","<input class='field' placeholder='username'><input class='field' placeholder='password' type='password'><button class='primary' id='demoAuth'>continue</button>");document.getElementById("demoAuth").onclick=()=>{toast("Demo action submitted.");closeModal()}}else openModal(x.toUpperCase(),"<p>"+(x==="privacy"?"This app uses Supabase for anonymous community messages.":x==="terms"?"Be respectful and do not spam.":"Contact details can be added here.")+"</p>")});
+
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+let currentSession=null,currentProfile=null;
+function authErrorMessage(err){
+ const m=String(err?.message||err||"Something went wrong.");
+ if(/invalid login credentials/i.test(m))return "Email or password is incorrect.";
+ if(/email not confirmed/i.test(m))return "Please confirm your email before signing in.";
+ if(/user already registered/i.test(m))return "That email is already registered.";
+ if(/password/i.test(m)&&/short|weak|characters/i.test(m))return "Use a stronger password (at least 8 characters).";
+ if(/duplicate|unique/i.test(m)&&/username/i.test(m))return "That username is already taken.";
+ return m;
+}
+function accountUI(session,profile){
+ currentSession=session||null; currentProfile=profile||null;
+ const name=document.getElementById("accountName"),status=document.getElementById("accountStatus"),actions=document.getElementById("accountActions"),avatar=document.getElementById("accountAvatar");
+ if(!name)return;
+ if(session){
+   name.textContent=profile?.username||session.user.email?.split("@")[0]||"member";
+   status.textContent="online";
+   avatar.src=profile?.avatar_url||"assets/aa720727d236d9b02e7e359b0d14cd72.jpg";
+   actions.innerHTML="<button data-action='account'>account</button><button data-action='logout'>logout</button>";
+ }else{
+   name.textContent="guest";status.textContent="offline";avatar.src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg";
+   actions.innerHTML="<button data-action='login'>login</button><button data-action='register'>register</button>";
+ }
+}
+async function ensureProfile(user){
+ if(!user)return null;
+ const {data,error}=await supabase.from("profiles").select("id,username,display_name,bio,avatar_url,created_at").eq("id",user.id).maybeSingle();
+ if(error){console.error(error);return null}
+ if(data)return data;
+ const desired=String(user.user_metadata?.username||user.email?.split("@")[0]||("user_"+user.id.slice(0,8))).replace(/[^A-Za-z0-9_]/g,"_").slice(0,24);
+ const username=desired.length>=3?desired:("user_"+user.id.slice(0,8));
+ const {data:created,error:createError}=await supabase.from("profiles").insert({id:user.id,username}).select("id,username,display_name,bio,avatar_url,created_at").single();
+ if(createError){
+   const fallback="user_"+user.id.replace(/-/g,"").slice(0,12);
+   const {data:created2,error:createError2}=await supabase.from("profiles").insert({id:user.id,username:fallback}).select("id,username,display_name,bio,avatar_url,created_at").single();
+   if(createError2){console.error(createError2);return null}
+   return created2;
+ }
+ return created;
+}
+async function refreshAuth(){
+ const {data:{session}}=await supabase.auth.getSession();
+ currentSession=session;
+ if(session){currentProfile=await ensureProfile(session.user)}
+ accountUI(session,currentProfile);
+}
+function authForms(mode){
+ if(mode==="login")return "<p class='muted'>Sign in to your MIZOBOARD account.</p><label>Email</label><input id='authEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><label>Password</label><input id='authPassword' class='field' type='password' autocomplete='current-password' placeholder='••••••••'><div class='auth-row'><button class='primary' id='authSubmit'>LOGIN</button><button class='link-btn' id='forgotBtn' type='button'>Forgot password?</button></div><p class='auth-switch'>No account? <button class='link-btn' id='switchRegister'>Register</button></p>";
+ return "<p class='muted'>Create your account. Your email stays private to Supabase Auth.</p><label>Username</label><input id='authUsername' class='field' maxlength='24' autocomplete='username' placeholder='3–24 letters, numbers or _'><label>Email</label><input id='authEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><label>Password</label><input id='authPassword' class='field' type='password' autocomplete='new-password' placeholder='at least 8 characters'><label>Confirm password</label><input id='authConfirm' class='field' type='password' autocomplete='new-password' placeholder='repeat password'><button class='primary' id='authSubmit'>CREATE ACCOUNT</button><p class='auth-switch'>Already have an account? <button class='link-btn' id='switchLogin'>Login</button></p>";
+}
+function openAuth(mode){
+ openModal(mode==="login"?"Login":"Create account",authForms(mode));
+ const submit=document.getElementById("authSubmit");
+ submit.onclick=async()=>{
+   submit.disabled=true;submit.textContent=mode==="login"?"SIGNING IN...":"CREATING...";
+   const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;
+   try{
+    if(mode==="login"){
+      const {error}=await supabase.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      toast("Welcome back.");closeModal();await refreshAuth();
+    }else{
+      const username=document.getElementById("authUsername").value.trim();
+      const confirm=document.getElementById("authConfirm").value;
+      if(!/^[A-Za-z0-9_]{3,24}$/.test(username))throw Error("Username must be 3–24 letters, numbers or underscores.");
+      if(password.length<8)throw Error("Password must be at least 8 characters.");
+      if(password!==confirm)throw Error("Passwords do not match.");
+      const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username},emailRedirectTo:location.origin+location.pathname}});
+      if(error)throw error;
+      if(data.session){
+        await ensureProfile(data.user);toast("Account created.");closeModal();await refreshAuth();
+      }else{
+        closeModal();openModal("Check your email","<p>We created your account. Check your inbox and click the confirmation link, then come back to log in.</p><button class='primary' id='closeAuthNotice'>OK</button>");
+        document.getElementById("closeAuthNotice").onclick=closeModal;
+      }
+    }
+   }catch(err){toast(authErrorMessage(err));submit.disabled=false;submit.textContent=mode==="login"?"LOGIN":"CREATE ACCOUNT";}
+ };
+ document.getElementById("forgotBtn")?.addEventListener("click",openForgot);
+ document.getElementById("switchRegister")?.addEventListener("click",()=>openAuth("register"));
+ document.getElementById("switchLogin")?.addEventListener("click",()=>openAuth("login"));
+}
+function openForgot(){
+ openModal("Reset password","<p class='muted'>Enter your account email. If it exists, Supabase will send a reset link.</p><input id='resetEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><button class='primary' id='resetSend'>SEND RESET LINK</button>");
+ document.getElementById("resetSend").onclick=async()=>{
+  const email=document.getElementById("resetEmail").value.trim();if(!email)return toast("Enter your email.");
+  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error)return toast(authErrorMessage(error));
+  openModal("Check your email","<p>If that email is registered, a password reset link has been sent.</p><button class='primary' id='resetDone'>OK</button>");
+  document.getElementById("resetDone").onclick=closeModal;
+ };
+}
+async function openAccount(){
+ if(!currentSession)return openAuth("login");
+ const p=currentProfile||await ensureProfile(currentSession.user);
+ openModal("My account","<div class='account-card'><b>@"+esc(p?.username||"member")+"</b><small>"+esc(currentSession.user.email||"")+"</small></div><label>Username</label><input id='profileUsername' class='field' maxlength='24' value='"+esc(p?.username||"")+"'><label>Display name</label><input id='profileDisplay' class='field' maxlength='40' value='"+esc(p?.display_name||"")+"'><label>Bio</label><textarea id='profileBio' class='field area' maxlength='160' placeholder='Tell people a little about yourself...'>"+esc(p?.bio||"")+"</textarea><label>Avatar URL <span class='muted'>(optional)</span></label><input id='profileAvatar' class='field' maxlength='500' type='url' value='"+esc(p?.avatar_url||"")+"'><button class='primary' id='saveProfile'>SAVE PROFILE</button><button class='secondary' id='changePassword'>CHANGE PASSWORD</button>");
+ document.getElementById("saveProfile").onclick=async()=>{
+  const username=document.getElementById("profileUsername").value.trim(),display=document.getElementById("profileDisplay").value.trim(),bio=document.getElementById("profileBio").value.trim(),avatar=document.getElementById("profileAvatar").value.trim();
+  if(!/^[A-Za-z0-9_]{3,24}$/.test(username))return toast("Invalid username.");
+  const {data,error}=await supabase.from("profiles").update({username,display_name:display||null,bio,avatar_url:avatar||null,updated_at:new Date().toISOString()}).eq("id",currentSession.user.id).select().single();
+  if(error)return toast(authErrorMessage(error));
+  currentProfile=data;accountUI(currentSession,currentProfile);toast("Profile saved.");closeModal();
+ };
+ document.getElementById("changePassword").onclick=()=>openModal("Change password","<p class='muted'>Use a new password with at least 8 characters.</p><input id='newPassword' class='field' type='password' autocomplete='new-password' placeholder='new password'><input id='newPassword2' class='field' type='password' autocomplete='new-password' placeholder='repeat password'><button class='primary' id='savePassword'>UPDATE PASSWORD</button>");
+ document.getElementById("savePassword").onclick=async()=>{
+  const a=document.getElementById("newPassword").value,b=document.getElementById("newPassword2").value;if(a.length<8)return toast("Password must be at least 8 characters.");if(a!==b)return toast("Passwords do not match.");
+  const {error}=await supabase.auth.updateUser({password:a});if(error)return toast(authErrorMessage(error));toast("Password updated.");closeModal();
+ };
+}
+function openRecovery(){
+ openModal("Set new password","<p class='muted'>Choose a new password for your account.</p><input id='recoveryPassword' class='field' type='password' autocomplete='new-password' placeholder='new password'><input id='recoveryPassword2' class='field' type='password' autocomplete='new-password' placeholder='repeat password'><button class='primary' id='recoverySave'>SAVE PASSWORD</button>");
+ document.getElementById("recoverySave").onclick=async()=>{const a=document.getElementById("recoveryPassword").value,b=document.getElementById("recoveryPassword2").value;if(a.length<8)return toast("Password must be at least 8 characters.");if(a!==b)return toast("Passwords do not match.");const {error}=await supabase.auth.updateUser({password:a});if(error)return toast(authErrorMessage(error));toast("Password changed.");closeModal();history.replaceState({},document.title,location.pathname+location.search);};
+}
+supabase.auth.onAuthStateChange((event,session)=>{
+ setTimeout(async()=>{
+  currentSession=session;
+  if(session)currentProfile=await ensureProfile(session.user);else currentProfile=null;
+  accountUI(session,currentProfile);
+  if(event==="PASSWORD_RECOVERY")openRecovery();
+ },0);
+});
+document.addEventListener("click",async e=>{
+ const a=e.target.closest("[data-action]");if(!a)return;e.preventDefault();const x=a.dataset.action;
+ if(x==="login")return openAuth("login");
+ if(x==="register")return openAuth("register");
+ if(x==="account")return openAccount();
+ if(x==="logout"){const {error}=await supabase.auth.signOut();if(error)toast(authErrorMessage(error));else{toast("Signed out.");accountUI(null,null)}return;}
+ if(x==="privacy")return openModal("PRIVACY","<p>Your account email and password are handled by Supabase Auth. MIZOBOARD stores only the profile information needed for the community experience. Never post private information publicly.</p>");
+ if(x==="terms")return openModal("TERMS","<p>Be respectful. No spam, threats, harassment, impersonation, or private information. Community content may be moderated.</p>");
+ if(x==="contact")return openModal("CONTACT","<p>Add your public contact address here before launch.</p>");
+});
+
 document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"})}else if(n==="forums"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})}else if(n==="members")openModal("Members","<p>12,430 registered members.</p>");else if(n==="help")openModal("Help","<p>Search filters forums. Click a forum to inspect its latest topic. Anonymous posting is still available through the current app backend.</p>");else if(n==="recent")toast("Showing the newest community activity.");else if(n==="popular")toast("Popular topics loaded.");else if(n==="rules")openModal("Rules","<ol><li>Be respectful.</li><li>No spam.</li><li>No private information.</li><li>Keep the community safe.</li></ol>");else if(n==="about")openModal("About","<p>MIZOBOARD is the dark cyber-retro presentation of Anonymous Sky.</p>");else if(n==="search")document.getElementById("searchInput").focus()});
 document.getElementById("randomThought").onclick=()=>{document.getElementById("forums").scrollIntoView({behavior:"smooth"});toast("Surprise me — community activity below.");};
 function applySearch(q){q=q.toLowerCase().trim();const list=q?forums.filter(f=>(f[0]+" "+f[1]+" "+f[4]).toLowerCase().includes(q)):forums;renderForums(list);if(!list.length)rows.innerHTML='<div class="empty-topics">No forum categories matched your search.</div>';toast(q?"Search complete.":"Showing all forums.")}
@@ -197,6 +331,6 @@ document.getElementById("localTrackBtn").onclick=()=>document.getElementById("lo
 document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
 playerPaint();loadTrack(0,false);
 
-loadMessages();setInterval(loadMessages,30000);
+refreshAuth();loadMessages();setInterval(loadMessages,30000);
 </script>
 </body></html>
