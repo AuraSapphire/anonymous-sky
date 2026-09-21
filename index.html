@@ -2,133 +2,128 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Anonymous Sky — SKY.EXE</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<title>MIZOBOARD — Anonymous Sky</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>\n  <audio id="siteIntroAudio" preload="auto" src="assets/alexis_gaming_cam-anime-shine-sound-effect-346114.mp3"></audio>
-<div class="scene">
-  <div class="sky-grid"></div><div class="tower tower1"></div><div class="tower tower2"></div><div class="tower tower3"></div>
-  <div class="giant-cloud cloud1"></div><div class="giant-cloud cloud2"></div><div class="blue-orb"></div>
-  <div class="butterfly">🦋</div>
-  <div class="hero-anime" aria-hidden="true"><div class="anime-hair"></div><div class="anime-head"><span></span><span></span></div><div class="headphones"></div><div class="anime-body"></div></div>
+<body>
+<div class="site">
+<header class="topbar">
+  <a href="#home" class="brand" data-nav="home"><span class="brand-mark">◎</span><span><b>MIZOBOARD</b><small>SAME PEOPLE. DIFFERENT STORIES.</small></span></a>
+  <nav class="topnav">
+    <button data-nav="home" class="active">⌂ HOME</button><button data-nav="forums">▣ FORUMS</button><button data-nav="members">♟ MEMBERS</button><button data-nav="search">⌕ SEARCH</button><button data-nav="help">? HELP</button>
+  </nav>
+  <div class="topmeta">SEP 21 2026<br>MON 18:24</div><div class="topnote">A QUIETER<br>PLACE ON THE<br>INTERNET...</div>
+</header>
 
-  <header class="branding">
-    <div><h1>Anonymous Sky</h1><p>見知らぬ空の下で、みんなつながってる。</p></div>
-    <div class="tagline">A PLACE FOR ANONYMOUS THOUGHTS<br><b>// 2000 — ∞</b><br>SKY.EXE</div>
-    <div class="farewell">また。どこかで。<small>see you, somewhere.</small></div>
-  </header>
-
-  <section class="media-shell">
-    <div class="shell-top">
-      <div class="top-icons"><button data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span></button><button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span></button><button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 2 1.8 7.2L21 12l-7.2 1.8L12 21l-1.8-7.2L3 12l7.2-2.8z"/></svg></span></button><button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span></button></div>
-      <div class="window-actions"><button>−</button><button>□</button><button>×</button></div>
-    </div>
-
-    <div class="app-body">
-      <aside class="left-panel">
-        <nav>
-<button class="active" data-action="home"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 11.2 12 4l9 7.2v8.3a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 19.5z"/><path d="M9 21v-6h6v6"/></svg></span><span>Home</span></button>
-<button data-action="messages"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v10H9l-5 4z"/></svg></span><span>Messages</span></button>
-<button data-action="explore"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><span>Explore</span></button>
-<button data-action="music"><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span><span>Music</span></button>
-<button data-action="about"><span class="ico"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span>About</span></button>
-</nav>
-        <div class="album-card">
-          <div class="album-picture"><span class="album-cloud">☁</span><span>☼</span></div>
-          <b>Anonymous Sky</b><small>v1.0.0</small>
-          <p>A place for<br>anonymous thoughts.</p>
-          <p>No identities.<br>Just thoughts.</p>
-        </div>
-        <div class="side-slogan">INTERNET<br>MUSIC<br>ANONYMOUS<br>FRIENDS<br>FOREVER...?</div>
-      </aside>
-
-      <main class="message-panel" id="feed">
-        <div class="panel-title"><div><h2>Messages</h2><span class="panel-path">SKY://MESSAGES</span></div><button id="randomThought" class="random-btn">☁ Surprise Me</button></div><div class="discovery"><input id="searchInput" type="search" maxlength="80" placeholder="🔍 Search the sky..."><div class="filters"><button data-filter="newest" class="active">Newest</button><button data-filter="popular">Popular</button><button data-filter="random">Random</button></div></div>
-        <div id="feedGrid" class="feed-grid"></div>
-      </main>
-
-      <aside class="right-panel">
-        <section class="widget">
-          <header><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 7h7l2 2h9v10H3z"/><path d="M3 7V5h7l2 2"/></svg></span> &nbsp; Post a Message <button>−</button><button>×</button></header>
-          <div class="post"><div class="identity-line">Posting as <b id="identityName">Anonymous</b> · no account required</div>
-            <textarea id="messageInput" maxlength="500" placeholder="Share your thoughts...&#10;(anonymous)"></textarea>
-            <div class="count" id="counter">0/500</div>
-            <button id="sendButton" class="send"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 5-5 3 3 2-2 4 4"/></svg></span> Send</button>
-          </div>
-        </section>
-
-        <section class="widget">
-          <header><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Now Playing <button>−</button><button>×</button></header>
-          <div class="now">
-            <div class="music-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></div><div><b>Mass Anasthesia.mp3</b><small>Unknown Artist</small></div>
-            <div class="progress"><i id="progressBar"></i></div>
-            <div class="time"><span>00:00</span><span id="duration">--:--</span></div>
-            <div class="controls"><button id="prevBtn">|◀</button><button id="playBtn">▶</button><button id="nextBtn">▶|</button><span>⌕</span><input id="volume" type="range" min="0" max="1" step=".01" value=".7"></div>
-          </div>
-        </section>
-
-        <section class="widget">
-          <header><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span> &nbsp; Status <button>−</button><button>×</button></header>
-          <div class="status"><div class="online"><i></i><b>Online</b><strong>2000 — ∞</strong></div><hr><p><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span> &nbsp; Sky visitors: <b id="onlineCount">∞</b></p><p><span class="ico"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></span> &nbsp; Messages: <b id="messageCount">0</b></p></div>
-        </section>
-      </aside>
-    </div>
-
-    <div class="bottom-player">
-      <div class="ready" id="readyText">Ready</div>
-      <div class="bottom-controls">
-        <button id="mainPlay">▶</button><button id="mainStop">■</button><button id="mainPrev">|◀</button><button id="mainNext">▶|</button><button id="mainMute">⌕</button>
-        <div class="bottom-seek"><i id="mainProgress"></i></div><input id="mainVolume" type="range" min="0" max="1" step=".01" value=".7">
-      </div>
-      <div class="bottom-right"><span class="windows-logo">⊞</span><span>□</span><span>♧</span></div>
-    </div>
-  </section>
-</div>
-<footer><span>☁　A BRIGHTER SKY AWAITS..</span><span>SEP 19 2026　20:45</span></footer>
-<div class="modal rei-modal" id="reiModal">
-  <div class="rei-window">
-    <button class="rei-close" id="reiClose">×</button>
-    <div class="rei-title">☁ SKY://REI <span>VOICE ASSISTANT</span></div>
-    <div class="rei-orb" id="reiOrb"><span>◉</span></div>
-    <div class="rei-status" id="reiStatus">Listening for the sky...</div>
-    <div class="rei-transcript" id="reiTranscript">Hello. I'm here.</div>
-    <button class="rei-talk" id="reiTalk">◉ Talk to Rei</button>
-    <p class="rei-note">Rei-inspired calm voice assistant. Voice recognition and speech stay in your browser.</p>
+<div class="page-grid">
+<aside class="left">
+ <section class="panel">
+  <div class="panel-title">NAVIGATION</div>
+  <div class="nav-list">
+   <button class="active" data-nav="home">⌂ Home</button><button data-nav="forums">▣ Forums</button><button data-nav="recent">▤ Recent Posts</button><button data-nav="popular">✥ Popular Topics</button><button data-nav="members">♟ Members</button><button data-nav="rules">♙ Rules</button><button data-nav="about">⚙ About Us</button>
   </div>
-</div>
-<div class="modal" id="modal"><div class="modal-box"><button id="modalClose">×</button><h2 id="modalTitle"></h2><p id="modalText"></p></div></div>
-<div class="modal gba-modal" id="gbaModal">
-  <div class="gba-window">
-    <button class="gba-close" id="gbaClose">×</button>
-    <div class="gba-title">☁ SKY://GBA PLAYER <span>GAME BOY ADVANCE</span></div>
-    <div class="gba-toolbar">
-      <label class="gba-load">📂 Load Local GBA<input id="gbaRom" type="file" accept=".gba,.zip" hidden></label>
-      <button id="gbaFullscreen">⛶ Fullscreen</button>
-      <span id="gbaStatus">No game loaded</span>
-    </div>
-    <div class="gba-screen-wrap"><div id="gbaGame"></div></div>
-    <p class="gba-note">Your ROM is loaded locally in your browser and is not uploaded to Anonymous Sky.</p>
+ </section>
+ <section class="panel art-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt="sky art"><p>“SOME CONVERSATIONS STAY WITH YOU FOREVER.”</p></section>
+ <section class="panel">
+  <div class="panel-title">NOW PLAYING</div><div class="player-mini">
+   <div class="album">♫</div><div><b>Mass Anasthesia.mp3</b><small>Unknown Artist</small></div>
+   <div class="bar"><i id="progressBar"></i></div><div class="player-time"><span id="curTime">00:00</span><span id="duration">--:--</span></div>
+   <div class="player-controls"><button id="prevBtn">|◀</button><button id="playBtn">▶</button><button id="nextBtn">▶|</button><input id="volume" type="range" min="0" max="1" step=".01" value=".7"></div>
   </div>
+ </section>
+ <section class="panel art-panel"><img src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="night artwork"><p>また、どこかで。<br><small>SEE YOU SOMEWHERE AGAIN.</small></p></section>
+</aside>
+
+<main id="home">
+<section class="hero">
+ <div class="hero-bg"></div><div class="hero-copy"><div class="jp">見知らぬ誰かと、<br>少しだけ近くに。</div><div><h1>MIZOBOARD</h1><p>ANONYMOUS • GLOBAL • ALWAYS ONLINE</p></div><div class="hero-words">POST<br>TALK<br>SHARE<br>BELONG<br>...</div></div>
+</section>
+<section class="status"><div>&gt; welcome to mizoboard -- a space for open minds.</div><div>[ <span id="onlineCount">142</span> online <em>●</em> ]</div><div>“better conversations for a brighter tomorrow.”</div></section>
+
+<section class="forum panel" id="forums">
+ <div class="panel-title forum-title"><span>// FORUM CATEGORIES</span><button id="randomThought" class="mini-btn">☁ Surprise Me</button></div>
+ <div class="search-row"><form id="searchForm"><input id="searchInput" type="search" placeholder="search..."><button>⌕</button></form><div class="filters"><button data-filter="newest" class="active">Newest</button><button data-filter="popular">Popular</button><button data-filter="random">Random</button></div></div>
+ <div class="forum-head"><div>FORUM</div><div>TOPICS</div><div>POSTS</div><div>LAST POST</div></div>
+ <div id="forumRows"></div>
+</section>
+</main>
+
+<aside class="right">
+ <section class="panel">
+  <div class="login-box"><img src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="guest"><div><b>guest</b><small>offline</small><div><button data-action="login">login</button><button data-action="register">register</button></div></div></div>
+ </section>
+ <section class="panel"><div class="panel-title">SEARCH</div><div class="panel-pad"><form class="search-small" id="searchFormRight"><input id="rightSearch" placeholder="search..."><button>⌕</button></form></div></section>
+ <section class="panel"><div class="panel-title">SITE STATS</div><div class="stats"><div>MEMBERS<b>12,430</b></div><div>TOPICS<b id="topicCount">67,191</b></div><div>POSTS<b id="messageCount">398,220</b></div><div>NEWEST<b>@starrysky</b></div></div></section>
+ <section class="panel quote-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt=""><p>“A KIND COMMUNITY CAN CHANGE SOMEONE’S DAY.”</p></section>
+ <section class="panel"><div class="panel-title">RANDOM</div><div class="panel-pad"><p class="random-copy">good people<br>share great things.<br>→</p></div></section>
+</aside>
 </div>
-<audio id="bgMusic" loop preload="metadata"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio>
+
+<footer><div>◎ MIZOBOARD</div><nav><a href="#home">home</a><a href="#forums">forums</a><a href="#" data-nav="members">members</a><a href="#" data-nav="search">search</a><a href="#" data-nav="help">help</a><a href="#" data-action="terms">terms</a><a href="#" data-action="privacy">privacy</a><a href="#" data-action="contact">contact</a></nav><div>© 2026 MIZOBOARD<br>made with ♡ for a better internet.</div></footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="modal-box"><button id="modalClose">×</button><h2 id="modalTitle"></h2><div id="modalBody"></div></div></div>
+<audio id="bgMusic" preload="metadata"><source src="Mass Anasthesia.mp3" type="audio/mpeg"></audio>
 <script>
-window.addEventListener("load",()=>{
-  const a=document.getElementById("siteIntroAudio");
-  if(!a)return;
-  const start=()=>{
-    a.currentTime=0;
-    a.play().catch(()=>{});
-    window.removeEventListener("pointerdown",start);
-    window.removeEventListener("keydown",start);
-    window.removeEventListener("touchstart",start);
-  };
-  a.play().catch(()=>{
-    window.addEventListener("pointerdown",start,{once:true});
-    window.addEventListener("keydown",start,{once:true});
-    window.addEventListener("touchstart",start,{once:true});
-  });
-});
-</script><script src="app.js"></script>
+const forums=[
+["General","Talk about anything here.","12,451","98,230","Re: What are you thinking right now?","starrysky","2 minutes ago"],
+["Technology","PCs, phones, software, and more.","8,732","61,204","Re: Best lightweight games?","neko.exe","14 minutes ago"],
+["Anime & Manga","Discuss anime, manga, and related media.","10,221","88,119","Re: Fall 2026 anime list?","yuu","37 minutes ago"],
+["Study & School","Homework, exams, tips, and more.","6,114","42,908","Re: Class 11 Physics Help","aura","1 hour ago"],
+["Creative Corner","Art, writing, music, projects.","4,389","31,776","Re: My latest artwork!","rui","2 hours ago"],
+["Off-Topic","For the random stuff.","15,672","120,441","Re: Random thoughts...","mizu","3 hours ago"]
+];
+const rows=document.getElementById("forumRows");
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.__t);window.__t=setTimeout(()=>t.classList.remove("show"),2100)}
+function openModal(title,html){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=html;document.getElementById("modal").classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+document.getElementById("modalClose").onclick=closeModal;
+document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+
+function renderForums(list){rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+f[0]+'</strong><small>'+f[1]+'</small></span></div><div class="num">'+f[2]+'</div><div class="num">'+f[3]+'</div><div class="last"><strong>'+f[4]+'</strong>by '+f[5]+'<br>'+f[6]+'</div></div>').join("");document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>openForum(forums[+r.dataset.i]))}
+function openForum(f){openModal(f[0],"<p>"+f[1]+"</p><div class='modal-topic'><b>"+f[4]+"</b><small>posted by "+f[5]+" · "+f[6]+"</small></div><button class='primary' id='newTopic'>new topic</button> <button class='primary' id='watch'>watch forum</button>");document.getElementById("watch").onclick=()=>{toast("Forum added to your watch list.");closeModal()};document.getElementById("newTopic").onclick=()=>openModal("New topic","<input class='field' placeholder='topic title'><textarea class='field area' placeholder='write your post...'></textarea><button class='primary' id='publish'>publish topic</button>")}
+renderForums(forums);
+
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const SUPABASE_URL="https://ffzhwsxmfxojrhszumwa.supabase.co";
+const SUPABASE_KEY="sb_publishable_oYyJcQpOVta7i1vstZvhzA_EfRzQNsr";
+const rest=SUPABASE_URL+"/rest/v1/messages";
+const headers={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY};
+let visitorId=localStorage.getItem("anonymousSkyVisitorId")||((crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)));localStorage.setItem("anonymousSkyVisitorId",visitorId);
+let myName=localStorage.getItem("anonymousSkyName");if(!myName){myName="Anonymous_"+String(Math.floor(Math.random()*900)+100);localStorage.setItem("anonymousSkyName",myName)}
+let allMessages=[];
+async function loadMessages(){
+ try{const r=await fetch(rest+"?select=id,content,created_at,author_id&order=created_at.desc&limit=100",{headers});if(!r.ok)throw Error();allMessages=await r.json();document.getElementById("messageCount").textContent=allMessages.length;document.getElementById("onlineCount").textContent=142+Math.min(99,allMessages.length);renderLiveMessages()}
+ catch(e){console.error(e)}
+}
+function renderLiveMessages(){
+ const existing=document.getElementById("liveMessages");if(existing)existing.remove();
+ if(!allMessages.length)return;
+ const box=document.createElement("div");box.id="liveMessages";box.className="live-messages";
+ box.innerHTML='<div class="panel-title">// LIVE COMMUNITY MESSAGES</div>'+allMessages.slice(0,10).map(m=>'<article><div><b>'+esc(m.author_id||"Anonymous")+'</b><small>'+new Date(m.created_at).toLocaleString()+'</small></div><p>'+esc(m.content)+'</p></article>').join("");
+ document.getElementById("forums").appendChild(box);
+}
+function openCompose(){
+ openModal("Post anonymously","<p class='muted'>Posting as <b>"+myName+"</b> · no account required</p><textarea id='postText' class='field area' maxlength='500' placeholder='Share your thoughts...'></textarea><div class='counter' id='pc'>0/500</div><button class='primary' id='sendPost'>Send</button>");
+ const ta=document.getElementById("postText");ta.oninput=()=>document.getElementById("pc").textContent=ta.value.length+"/500";
+ document.getElementById("sendPost").onclick=async()=>{const text=ta.value.trim();if(!text)return;const r=await fetch(rest,{method:"POST",headers:{...headers,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({content:text,author_id:myName})});if(!r.ok){toast("Could not send the message.");return}toast("Message posted.");closeModal();loadMessages()}
+}
+document.addEventListener("click",e=>{const a=e.target.closest("[data-action]");if(!a)return;e.preventDefault();const x=a.dataset.action;if(x==="login"||x==="register"){openModal(x==="login"?"Login":"Register","<input class='field' placeholder='username'><input class='field' placeholder='password' type='password'><button class='primary' id='demoAuth'>continue</button>");document.getElementById("demoAuth").onclick=()=>{toast("Demo action submitted.");closeModal()}}else openModal(x.toUpperCase(),"<p>"+(x==="privacy"?"This app uses Supabase for anonymous community messages.":x==="terms"?"Be respectful and do not spam.":"Contact details can be added here.")+"</p>")});
+document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home")window.scrollTo({top:0,behavior:"smooth"});else if(n==="forums")document.getElementById("forums").scrollIntoView({behavior:"smooth"});else if(n==="members")openModal("Members","<p>12,430 registered members.</p>");else if(n==="help")openModal("Help","<p>Search filters forums. Click a forum to inspect its latest topic. Anonymous posting is still available through the current app backend.</p>");else if(n==="recent")toast("Showing the newest community activity.");else if(n==="popular")toast("Popular topics loaded.");else if(n==="rules")openModal("Rules","<ol><li>Be respectful.</li><li>No spam.</li><li>No private information.</li><li>Keep the community safe.</li></ol>");else if(n==="about")openModal("About","<p>MIZOBOARD is the dark cyber-retro presentation of Anonymous Sky.</p>");else if(n==="search")document.getElementById("searchInput").focus()});
+document.getElementById("randomThought").onclick=()=>{document.getElementById("forums").scrollIntoView({behavior:"smooth"});toast("Surprise me — community activity below.");};
+function applySearch(q){q=q.toLowerCase().trim();const list=q?forums.filter(f=>(f[0]+" "+f[1]+" "+f[4]).toLowerCase().includes(q)):forums;renderForums(list);toast(q?"Search complete.":"Showing all forums.")}
+document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();applySearch(document.getElementById("searchInput").value)}
+document.getElementById("searchFormRight").onsubmit=e=>{e.preventDefault();const q=document.getElementById("rightSearch").value;document.getElementById("searchInput").value=q;applySearch(q)}
+document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));let list=[...forums];if(b.dataset.filter==="random")list.sort(()=>Math.random()-.5);if(b.dataset.filter==="popular")list.sort((a,z)=>parseInt(z[3].replace(/,/g,""))-parseInt(a[3].replace(/,/g,"")));renderForums(list)});
+
+const music=document.getElementById("bgMusic"),playBtn=document.getElementById("playBtn"),volume=document.getElementById("volume");
+function setPlaying(on){playBtn.textContent=on?"Ⅱ":"▶"}
+playBtn.onclick=async()=>{if(music.paused){try{await music.play();setPlaying(true)}catch{toast("Add Mass Anasthesia.mp3 to the repo first.")}}else{music.pause();setPlaying(false)}}
+document.getElementById("prevBtn").onclick=()=>music.currentTime=0;document.getElementById("nextBtn").onclick=()=>music.currentTime=0;volume.oninput=e=>music.volume=e.target.value;music.volume=.7;
+music.onloadedmetadata=()=>document.getElementById("duration").textContent=new Date(music.duration*1000).toISOString().slice(14,19);
+music.ontimeupdate=()=>{const p=music.duration?music.currentTime/music.duration*100:0;document.getElementById("progressBar").style.width=p+"%";document.getElementById("curTime").textContent=new Date(music.currentTime*1000).toISOString().slice(14,19)}
+
+loadMessages();setInterval(loadMessages,30000);
+</script>
 </body></html>
