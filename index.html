@@ -197,11 +197,12 @@ async function openThread(t){
  if(visitorId){await supabase.from("forum_topic_views").upsert({topic_id:id,viewer_id:visitorId},{onConflict:"topic_id,viewer_id",ignoreDuplicates:true});}
  const {data:replies,error}=await supabase.from("forum_replies").select("id,body,author_username,created_at").eq("topic_id",id).order("created_at",{ascending:true});
  if(error)return toast("Could not load replies.");
- const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p></div>").join("");
+ const replyHtml=(replies||[]).map(r=>"<div class='thread-post'><b>"+esc(r.author_username)+"</b><small class='muted'> · "+new Date(r.created_at).toLocaleString()+"</small><p>"+esc(r.body).replace(/\n/g,"<br>")+"</p><button class='link-btn reply-report' data-reply-id='"+r.id+"'>report</button></div>").join("");
  openModal(t[0],"<div class='thread-meta'>"+currentForum+" · started by <b>"+esc(t[3])+"</b> · "+new Date(t[4]).toLocaleString()+"</div><div class='thread-post'><b>"+esc(t[3])+"</b><p>"+esc(t[6]).replace(/\n/g,"<br>")+"</p></div><div id='threadReplies'>"+replyHtml+"</div>"+(t[7]?"<p class='muted'>This topic is locked.</p>":"<button class='primary' id='replyTopic'>REPLY</button> <button class='primary' id='watchTopic'>WATCH TOPIC</button>")+" <button class='secondary' id='reportTopic'>REPORT</button>");
  document.getElementById("watchTopic")?.addEventListener("click",()=>{const w=JSON.parse(localStorage.getItem("watchedTopics")||"[]");if(!w.includes(id))w.push(id);localStorage.setItem("watchedTopics",JSON.stringify(w));toast("Topic added to your watch list.")});
  document.getElementById("replyTopic")?.addEventListener("click",()=>openReply(id));
  document.getElementById("reportTopic")?.addEventListener("click",()=>openReport("topic",id));
+ document.querySelectorAll(".reply-report").forEach(b=>b.onclick=()=>openReport("reply",Number(b.dataset.replyId)));
 }
 function openReport(type,id){
  if(!currentSession)return openAuth("login");
