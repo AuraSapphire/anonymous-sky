@@ -118,6 +118,16 @@
   </div>
 </section>
 
+<section id="utilityPage" class="forum-page is-hidden">
+  <div class="forum-breadcrumb"><button id="utilityBack">← HOME</button><span>MIZOBOARD</span><b>›</b><strong id="utilityPageName">COMMUNITY</strong></div>
+  <div class="compose-shell panel utility-shell">
+    <div class="forum-kicker">// MIZOBOARD</div>
+    <h2 id="utilityTitle">Community</h2>
+    <p class="muted" id="utilityDesc">Browse the community.</p>
+    <div id="utilityContent"></div>
+  </div>
+</section>
+
 <section id="composePage" class="forum-page is-hidden">
   <div class="forum-breadcrumb"><button id="composeBack">← BACK TO FORUM</button><span>MIZOBOARD</span><b>›</b><strong id="composeForumName">Technology</strong></div>
   <div class="compose-shell panel">
@@ -455,7 +465,40 @@ document.addEventListener("click",async e=>{
  if(x==="contact")return openModal("CONTACT","<p>Add your public contact address here before launch.</p>");
 });
 
-document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"})}else if(n==="forums"){document.getElementById("forumPage").classList.add("is-hidden");document.getElementById("topicPage").classList.add("is-hidden");document.getElementById("composePage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"})}else if(n==="members")openModal("Members","<p>12,430 registered members.</p>");else if(n==="help")openModal("Help","<p>Search filters forums. Click a forum to inspect its latest topic. Anonymous posting is still available through the current app backend.</p>");else if(n==="recent")toast("Showing the newest community activity.");else if(n==="popular")toast("Popular topics loaded.");else if(n==="rules")openModal("Rules","<ol><li>Be respectful.</li><li>No spam.</li><li>No private information.</li><li>Keep the community safe.</li></ol>");else if(n==="about")openModal("About","<p>MIZOBOARD is the dark cyber-retro presentation of Anonymous Sky.</p>");else if(n==="search")document.getElementById("searchInput").focus()});
+async function showUtilityPage(kind){
+ const home=document.getElementById("home"),forum=document.getElementById("forumPage"),topic=document.getElementById("topicPage"),compose=document.getElementById("composePage"),utility=document.getElementById("utilityPage");
+ [home,forum,topic,compose].forEach(x=>x.classList.add("is-hidden"));utility.classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});
+ const title=document.getElementById("utilityTitle"),desc=document.getElementById("utilityDesc"),content=document.getElementById("utilityContent"),name=document.getElementById("utilityPageName");
+ name.textContent=kind.toUpperCase(); content.innerHTML="<div class='empty-topics'>Loading...</div>";
+ if(kind==="members"){
+   title.textContent="Members";desc.textContent="People who have joined MIZOBOARD.";
+   const {data,error}=await supabase.from("profiles").select("username,display_name,bio,created_at").order("created_at",{ascending:false}).limit(50);
+   if(error){content.innerHTML="<div class='empty-topics'>Could not load members.</div>";return}
+   content.innerHTML=(data||[]).map(p=>"<div class='utility-item'><b>@"+esc(p.username)+"</b><small>"+esc(p.display_name||"member")+" · joined "+new Date(p.created_at).toLocaleDateString()+"</small><p>"+esc(p.bio||"No bio yet.")+"</p></div>").join("")||"<div class='empty-topics'>No members yet.</div>";
+ }else if(kind==="recent"||kind==="popular"){
+   title.textContent=kind==="recent"?"Recent Posts":"Popular Topics";desc.textContent=kind==="recent"?"The newest conversations across all forums.":"Topics with the most replies and views.";
+   let q=supabase.from("forum_topics").select("id,forum,title,author_username,created_at,views,locked,forum_replies(count),forum_topic_views(count)").limit(30);
+   q=kind==="recent"?q.order("created_at",{ascending:false}):q.order("views",{ascending:false});
+   const {data,error}=await q;
+   if(error){content.innerHTML="<div class='empty-topics'>Could not load topics.</div>";return}
+   const list=data||[];content.innerHTML=list.map(t=>"<button class='utility-item utility-topic' data-util-topic='"+t.id+"'><b>"+esc(t.title)+"</b><small>"+esc(t.forum)+" · by "+esc(t.author_username)+" · "+new Date(t.created_at).toLocaleString()+"</small><p>"+(t.forum_replies?.[0]?.count||0)+" replies · "+(t.forum_topic_views?.[0]?.count||0)+" views</p></button>").join("")||"<div class='empty-topics'>No topics yet.</div>";
+   content.querySelectorAll("[data-util-topic]").forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.utilTopic),topicRow=list.find(t=>t.id===id);if(!topicRow)return;await loadForumTopics(topicRow.forum,1);const fresh=currentForumRows.find(x=>x.id===id);if(fresh)await openThread([fresh.title,fresh.forum_replies?.[0]?.count||0,fresh.forum_topic_views?.[0]?.count||0,fresh.author_username,fresh.created_at,id,fresh.body,fresh.locked]);});
+ }else if(kind==="search"){
+   title.textContent="Search";desc.textContent="Search forum categories, then open a forum to search its topics.";
+   content.innerHTML="<form id='utilitySearchForm' class='forum-search utility-search'><input id='utilitySearchInput' placeholder='Search forums...'><button>⌕</button></form><div id='utilitySearchResults'></div>";
+   document.getElementById("utilitySearchForm").onsubmit=e=>{e.preventDefault();const q=document.getElementById("utilitySearchInput").value.trim().toLowerCase();const matches=q?liveForums.filter(f=>(f[0]+" "+f[1]).toLowerCase().includes(q)):liveForums;document.getElementById("utilitySearchResults").innerHTML=matches.map(f=>"<button class='utility-item utility-topic' data-forum-name='"+esc(f[0])+"'><b>"+esc(f[0])+"</b><small>"+esc(f[1])+"</small><p>"+Number(f[2]).toLocaleString()+" topics · "+Number(f[3]).toLocaleString()+" posts</p></button>").join("")||"<div class='empty-topics'>No forums matched.</div>";document.querySelectorAll("[data-forum-name]").forEach(b=>b.onclick=()=>{const f=forums.find(x=>x[0]===b.dataset.forumName);if(f)openForum(f)});};
+ }else if(kind==="help"){
+   title.textContent="Help";desc.textContent="How MIZOBOARD works.";content.innerHTML="<div class='utility-item'><b>Forums</b><p>Choose a category, open a topic, read replies, watch topics, or report content.</p></div><div class='utility-item'><b>Accounts</b><p>Login is required to create topics and replies. Guests can still use the anonymous board features.</p></div><div class='utility-item'><b>Search</b><p>Use the search box on a forum page to filter topics by title, body, or author.</p></div>";
+ }else if(kind==="rules"){
+   title.textContent="Rules";desc.textContent="Keep MIZOBOARD useful and safe.";content.innerHTML="<ol class='utility-rules'><li>Be respectful.</li><li>No spam or deliberate disruption.</li><li>Do not post threats or private information.</li><li>Keep sexual or unsafe material out of general community areas.</li><li>Use reports when something needs moderator attention.</li></ol>";
+ }else{
+   title.textContent="About MIZOBOARD";desc.textContent="A quieter place on the internet.";content.innerHTML="<div class='utility-item'><b>MIZOBOARD</b><p>A dark cyber-retro community interface built around forums, conversations, anonymous posts, and a small collection of community tools.</p></div>";
+ }
+}
+function closeUtility(){document.getElementById("utilityPage").classList.add("is-hidden");document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});}
+document.getElementById("utilityBack").onclick=closeUtility;
+document.querySelectorAll("[data-nav]").forEach(b=>b.onclick=async e=>{e.preventDefault();const n=b.dataset.nav;if(n==="home"){[document.getElementById("forumPage"),document.getElementById("topicPage"),document.getElementById("composePage"),document.getElementById("utilityPage")].forEach(x=>x.classList.add("is-hidden"));document.getElementById("home").classList.remove("is-hidden");window.scrollTo({top:0,behavior:"smooth"});}else if(n==="forums"){[document.getElementById("forumPage"),document.getElementById("topicPage"),document.getElementById("composePage"),document.getElementById("utilityPage")].forEach(x=>x.classList.add("is-hidden"));document.getElementById("home").classList.remove("is-hidden");document.getElementById("forums").scrollIntoView({behavior:"smooth"});}else if(["members","recent","popular","rules","about","help","search"].includes(n)){await showUtilityPage(n);}});
+
 document.getElementById("randomThought").onclick=()=>{document.getElementById("forums").scrollIntoView({behavior:"smooth"});toast("Surprise me — community activity below.");};
 function applySearch(q){q=q.toLowerCase().trim();const list=q?liveForums.filter(f=>(f[0]+" "+f[1]+" "+f[4]+" "+f[5]).toLowerCase().includes(q)):liveForums;renderForums(list);if(!list.length)rows.innerHTML='<div class="empty-topics">No forum categories matched your search.</div>';toast(q?"Search complete.":"Showing all forums.")}
 document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();applySearch(document.getElementById("searchInput").value)}
