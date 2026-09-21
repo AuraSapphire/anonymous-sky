@@ -25,15 +25,31 @@
  </section>
  <section class="panel art-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt="sky art"><p>“SOME CONVERSATIONS STAY WITH YOU FOREVER.”</p></section>
  <section class="panel">
-  <div class="panel-title"><span>NOW PLAYING</span><span class="player-live">● LIVE</span></div>
-  <div class="music-player">
-   <div class="music-cover"><span>♫</span><i></i><i></i><i></i></div>
-   <div class="music-info"><b id="trackTitle">Mass Anasthesia</b><small id="trackArtist">Unknown Artist</small><div class="music-status"><span id="trackIndex">01 / 01</span><span id="musicState">PAUSED</span></div></div>
-   <div class="music-seek"><span id="curTime">00:00</span><input id="seekBar" type="range" min="0" max="100" value="0" step=".1"><span id="duration">00:00</span></div>
-   <div class="music-controls"><button id="shuffleBtn" title="Shuffle">⤨</button><button id="prevBtn" title="Previous">|◀</button><button id="playBtn" class="main-play" title="Play">▶</button><button id="nextBtn" title="Next">▶|</button><button id="repeatBtn" title="Repeat">↻</button></div>
-   <div class="music-bottom"><label>VOL <input id="volume" type="range" min="0" max="1" step=".01" value=".7"></label><button id="localTrackBtn">＋ LOCAL MP3</button><input id="localTrack" type="file" accept="audio/*" multiple hidden></div>
+ <div class="panel-title"><span>NOW PLAYING</span><span class="player-live">● LIVE</span></div>
+  <div class="mp3-player">
+    <div class="mp3-display">
+      <div class="mp3-display-top"><span id="mp3Status">STOPPED</span><span id="mp3Clock">00:00</span></div>
+      <div class="mp3-track" id="trackTitle">Mass Anasthesia</div>
+      <div class="mp3-artist" id="trackArtist">Unknown Artist</div>
+      <div class="mp3-visual" id="mp3Visual"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="mp3-progress"><input id="seekBar" type="range" min="0" max="100" value="0" step=".1"></div>
+    <div class="mp3-times"><span id="curTime">00:00</span><span id="duration">00:00</span></div>
+    <div class="mp3-buttons">
+      <button id="shuffleBtn" title="Shuffle">SHF</button>
+      <button id="prevBtn" title="Previous">|◀</button>
+      <button id="playBtn" class="mp3-main" title="Play">▶</button>
+      <button id="stopBtn" title="Stop">■</button>
+      <button id="nextBtn" title="Next">▶|</button>
+      <button id="repeatBtn" title="Repeat">RPT</button>
+    </div>
+    <div class="mp3-bottom">
+      <span>VOL</span><input id="volume" type="range" min="0" max="1" step=".01" value=".7">
+      <button id="localTrackBtn">+ MP3</button><input id="localTrack" type="file" accept="audio/mpeg,audio/*" multiple hidden>
+    </div>
   </div>
  </section>
+
  <section class="panel art-panel"><img src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt="night artwork"><p>また、どこかで。<br><small>SEE YOU SOMEWHERE AGAIN.</small></p></section>
 </aside>
 
@@ -159,25 +175,27 @@ document.getElementById("searchForm").onsubmit=e=>{e.preventDefault();applySearc
 document.getElementById("searchFormRight").onsubmit=e=>{e.preventDefault();const q=document.getElementById("rightSearch").value;document.getElementById("searchInput").value=q;applySearch(q)}
 document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));let list=[...forums];if(b.dataset.filter==="random")list.sort(()=>Math.random()-.5);if(b.dataset.filter==="popular")list.sort((a,z)=>parseInt(z[3].replace(/,/g,""))-parseInt(a[3].replace(/,/g,"")));renderForums(list)});
 
-const music=document.getElementById("bgMusic"),playBtn=document.getElementById("playBtn"),volume=document.getElementById("volume"),seekBar=document.getElementById("seekBar");
-let playlist=[{src:"Mass Anasthesia.mp3",title:"Mass Anasthesia",artist:"Unknown Artist"}],track=0,shuffle=false,repeat=false;
-function fmt(t){if(!Number.isFinite(t))return"00:00";return Math.floor(t/60).toString().padStart(2,"0")+":"+Math.floor(t%60).toString().padStart(2,"0")}
-function paintPlayer(){const t=playlist[track];document.getElementById("trackTitle").textContent=t?.title||"Unknown Track";document.getElementById("trackArtist").textContent=t?.artist||"Local File";document.getElementById("trackIndex").textContent=String(track+1).padStart(2,"0")+" / "+String(playlist.length).padStart(2,"0");document.getElementById("musicState").textContent=music.paused?"PAUSED":"PLAYING";document.getElementById("shuffleBtn").classList.toggle("active",shuffle);document.getElementById("repeatBtn").classList.toggle("active",repeat)}
-function loadTrack(i,autoplay=false){if(!playlist.length)return;track=(i+playlist.length)%playlist.length;music.src=playlist[track].src;music.load();paintPlayer();if(autoplay)music.play().then(()=>paintPlayer()).catch(()=>toast("Track unavailable. Add the MP3 or choose LOCAL MP3."))}
-playBtn.onclick=async()=>{if(music.paused){try{await music.play();paintPlayer()}catch{toast("Track unavailable. Add the MP3 or choose LOCAL MP3.")}}else{music.pause();paintPlayer()}};
+const music=document.getElementById("bgMusic"),playBtn=document.getElementById("playBtn"),stopBtn=document.getElementById("stopBtn"),volume=document.getElementById("volume"),seekBar=document.getElementById("seekBar");
+let playlist=[{src:"assets/alexis_gaming_cam-anime-shine-sound-effect-346114.mp3",title:"Anime Shine",artist:"MIZOBOARD"}],track=0,shuffle=false,repeat=false;
+const fmt=t=>Number.isFinite(t)?Math.floor(t/60).toString().padStart(2,"0")+":"+Math.floor(t%60).toString().padStart(2,"0"):"00:00";
+function playerPaint(){const t=playlist[track];document.getElementById("trackTitle").textContent=t?.title||"Unknown Track";document.getElementById("trackArtist").textContent=t?.artist||"Local MP3";document.getElementById("mp3Status").textContent=music.paused?(music.currentTime?"PAUSED":"STOPPED"):"PLAYING";document.getElementById("mp3Clock").textContent=fmt(music.currentTime);document.getElementById("trackIndex")?.remove();document.getElementById("shuffleBtn").classList.toggle("active",shuffle);document.getElementById("repeatBtn").classList.toggle("active",repeat);document.querySelectorAll("#mp3Visual i").forEach(x=>x.classList.toggle("on",!music.paused))}
+function loadTrack(i,auto=false){if(!playlist.length)return;track=(i+playlist.length)%playlist.length;music.src=playlist[track].src;music.load();playerPaint();if(auto)music.play().catch(()=>toast("This track could not be played."))}
+playBtn.onclick=async()=>{if(music.paused){try{await music.play()}catch{toast("Choose + MP3 if the track is unavailable.")}}else music.pause();playerPaint()};
+stopBtn.onclick=()=>{music.pause();music.currentTime=0;playerPaint()};
 document.getElementById("prevBtn").onclick=()=>loadTrack(track-1,!music.paused);
 document.getElementById("nextBtn").onclick=()=>loadTrack(shuffle?Math.floor(Math.random()*playlist.length):track+1,!music.paused);
-document.getElementById("shuffleBtn").onclick=()=>{shuffle=!shuffle;paintPlayer()};
-document.getElementById("repeatBtn").onclick=()=>{repeat=!repeat;paintPlayer()};
-seekBar.oninput=()=>{if(music.duration)music.currentTime=(seekBar.value/100)*music.duration};
-volume.oninput=e=>music.volume=e.target.value;music.volume=.7;
+document.getElementById("shuffleBtn").onclick=()=>{shuffle=!shuffle;playerPaint()};
+document.getElementById("repeatBtn").onclick=()=>{repeat=!repeat;playerPaint()};
+seekBar.oninput=()=>{if(music.duration)music.currentTime=music.duration*(seekBar.value/100)};
+volume.oninput=e=>music.volume=+e.target.value;
+music.volume=.7;
 music.onloadedmetadata=()=>{document.getElementById("duration").textContent=fmt(music.duration);seekBar.value=0};
-music.ontimeupdate=()=>{document.getElementById("curTime").textContent=fmt(music.currentTime);seekBar.value=music.duration?(music.currentTime/music.duration)*100:0};
-music.onplay=paintPlayer;music.onpause=paintPlayer;
-music.onended=()=>{if(repeat)loadTrack(track,true);else if(track<playlist.length-1||shuffle)loadTrack(shuffle?Math.floor(Math.random()*playlist.length):track+1,true);else paintPlayer()};
+music.ontimeupdate=()=>{document.getElementById("curTime").textContent=fmt(music.currentTime);document.getElementById("mp3Clock").textContent=fmt(music.currentTime);seekBar.value=music.duration?music.currentTime/music.duration*100:0};
+music.onplay=playerPaint;music.onpause=playerPaint;
+music.onended=()=>{if(repeat)loadTrack(track,true);else if(track<playlist.length-1||shuffle)loadTrack(shuffle?Math.floor(Math.random()*playlist.length):track+1,true);else playerPaint()};
 document.getElementById("localTrackBtn").onclick=()=>document.getElementById("localTrack").click();
-document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"Local MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" local track"+(playlist.length===1?"":"s")+" loaded.")};
-paintPlayer();loadTrack(0,false);
+document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
+playerPaint();loadTrack(0,false);
 
 loadMessages();setInterval(loadMessages,30000);
 </script>
