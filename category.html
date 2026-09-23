@@ -15,7 +15,31 @@
 <section class="panel"><div class="panel-title">NAVIGATION</div><div class="nav-list">
 <a href="index.html">⌂ Home</a><a class="active" href="index.html#forums">▣ Forums</a><a href="index.html?view=recent">▤ Recent Posts</a><a href="index.html?view=popular">✥ Popular Topics</a><a href="index.html?view=members">♟ Members</a><a href="index.html?view=rules">♙ Rules</a><a href="index.html?view=about">⚙ About Us</a></div></section>
 <section class="panel art-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt=""><p>“SOME CONVERSATIONS<br>STAY WITH YOU FOREVER.”</p></section>
-<section class="panel"><div class="panel-title"><span>NOW PLAYING</span><span class="player-live">● LIVE</span></div><div class="category-player"><div class="category-album">▣</div><div><b>departure</b><small>Nujabes</small></div><div class="category-progress"><i></i></div><div class="category-time">1:52 / 3:18</div><div class="category-controls"><button>|◀</button><button>Ⅱ</button><button>▶|</button></div></div></section>
+<section class="panel">
+ <div class="panel-title"><span>NOW PLAYING</span><span class="player-live">● LIVE</span></div>
+  <div class="mp3-player">
+    <div class="mp3-display">
+      <div class="mp3-display-top"><span id="mp3Status">STOPPED</span><span id="mp3Clock">00:00</span></div>
+      <div class="mp3-track" id="trackTitle">Mass Anasthesia</div>
+      <div class="mp3-artist" id="trackArtist">Unknown Artist</div>
+      <div class="mp3-visual" id="mp3Visual"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="mp3-progress"><input id="seekBar" type="range" min="0" max="100" value="0" step=".1"></div>
+    <div class="mp3-times"><span id="curTime">00:00</span><span id="duration">00:00</span></div>
+    <div class="mp3-buttons">
+      <button id="shuffleBtn" title="Shuffle">SHF</button>
+      <button id="prevBtn" title="Previous">|◀</button>
+      <button id="playBtn" class="mp3-main" title="Play">▶</button>
+      <button id="stopBtn" title="Stop">■</button>
+      <button id="nextBtn" title="Next">▶|</button>
+      <button id="repeatBtn" title="Repeat">RPT</button>
+    </div>
+    <div class="mp3-bottom">
+      <span>VOL</span><input id="volume" type="range" min="0" max="1" step=".01" value=".7">
+      <button id="localTrackBtn">+ MP3</button><input id="localTrack" type="file" accept="audio/mpeg,audio/*" multiple hidden>
+    </div>
+  </div>
+ </section>
 <section class="panel art-panel"><img src="assets/aa720727d236d9b02e7e359b0d14cd72.jpg" alt=""><p>また、どこかで。<br><small>SEE YOU SOMEWHERE AGAIN.</small></p></section>
 </aside>
 <main class="category-main">
