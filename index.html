@@ -22,7 +22,7 @@
  <section class="panel">
   <div class="panel-title">NAVIGATION</div>
   <div class="nav-list">
-   <button class="active" data-nav="home">⌂ Home</button><button data-nav="forums">▣ Forums</button><button data-nav="recent">▤ Recent Posts</button><button data-nav="popular">✥ Popular Topics</button><button data-nav="members">♟ Members</button><button data-nav="rules">♙ Rules</button><button data-nav="about">⚙ About Us</button>
+   <a class="active" href="index.html?view=home">⌂ Home</a><a href="index.html?view=forums">▣ Forums</a><a href="index.html?view=recent">▤ Recent Posts</a><a href="index.html?view=popular">✥ Popular Topics</a><a href="index.html?view=members">♟ Members</a><a href="index.html?view=rules">♙ Rules</a><a href="index.html?view=about">⚙ About Us</a>
   </div>
  </section>
  <section class="panel art-panel"><img src="assets/270183aaba377f63e529d91594d02a4e.jpg" alt="sky art"><p>“SOME CONVERSATIONS STAY WITH YOU FOREVER.”</p></section>
@@ -569,6 +569,11 @@ document.getElementById("localTrackBtn").onclick=()=>document.getElementById("lo
 document.getElementById("localTrack").onchange=e=>{const files=[...e.target.files];if(!files.length)return;playlist=files.map(file=>({src:URL.createObjectURL(file),title:file.name.replace(/\.[^.]+$/,""),artist:"LOCAL MP3"}));track=0;loadTrack(0,false);toast(playlist.length+" MP3"+(playlist.length>1?"s":"")+" loaded.")};
 playerPaint();loadTrack(0,false);
 
-refreshAuth();loadMessages();loadSiteStats();loadForumOverview();setInterval(()=>{loadMessages();loadSiteStats();loadForumOverview()},30000);
+refreshAuth();loadMessages();loadSiteStats();loadForumOverview();
+const initialView=new URLSearchParams(location.search).get("view");
+if(initialView==="home"){document.getElementById("home").classList.remove("is-hidden");}
+else if(initialView==="forums"){document.getElementById("home").classList.remove("is-hidden");setTimeout(()=>document.getElementById("forums")?.scrollIntoView(),0);}
+else if(["members","recent","popular","rules","about"].includes(initialView)){showUtilityPage(initialView);}
+setInterval(()=>{loadMessages();loadSiteStats();loadForumOverview()},30000);
 </script>
 </body></html>
