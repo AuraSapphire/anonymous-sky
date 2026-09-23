@@ -420,7 +420,7 @@ async function refreshAuth(){
  accountUI(session,currentProfile);
 }
 function authForms(mode){
- if(mode==="login")return "<p class='muted'>Sign in to your MIZOBOARD account.</p><label>Email</label><input id='authEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><label>Password</label><input id='authPassword' class='field' type='password' autocomplete='current-password' placeholder='••••••••'><div class='auth-row'><button class='primary' id='authSubmit'>LOGIN</button><button class='link-btn' id='forgotBtn' type='button'>Forgot password?</button></div><p class='auth-switch'>No account? <button class='link-btn' id='switchRegister'>Register</button></p>";
+ if(mode==="login")return "<p class='muted'>Sign in to your MIZOBOARD account.</p><label>Email</label><input id='authEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><label>Password</label><input id='authPassword' class='field' type='password' autocomplete='current-password' placeholder='••••••••'><button class='primary' id='authSubmit'>LOGIN</button><p class='auth-switch'>No account? <button class='link-btn' id='switchRegister'>Register</button></p>";
  return "<p class='muted'>Create your account. Your email stays private to Supabase Auth.</p><label>Username</label><input id='authUsername' class='field' maxlength='24' autocomplete='username' placeholder='3–24 letters, numbers or _'><label>Email</label><input id='authEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><label>Password</label><input id='authPassword' class='field' type='password' autocomplete='new-password' placeholder='at least 8 characters'><label>Confirm password</label><input id='authConfirm' class='field' type='password' autocomplete='new-password' placeholder='repeat password'><button class='primary' id='authSubmit'>CREATE ACCOUNT</button><p class='auth-switch'>Already have an account? <button class='link-btn' id='switchLogin'>Login</button></p>";
 }
 function openAuth(mode){
@@ -451,19 +451,8 @@ function openAuth(mode){
     }
    }catch(err){toast(authErrorMessage(err));submit.disabled=false;submit.textContent=mode==="login"?"LOGIN":"CREATE ACCOUNT";}
  };
- document.getElementById("forgotBtn")?.addEventListener("click",openForgot);
  document.getElementById("switchRegister")?.addEventListener("click",()=>openAuth("register"));
  document.getElementById("switchLogin")?.addEventListener("click",()=>openAuth("login"));
-}
-function openForgot(){
- openModal("Reset password","<p class='muted'>Enter your account email. If it exists, Supabase will send a reset link.</p><input id='resetEmail' class='field' type='email' autocomplete='email' placeholder='you@example.com'><button class='primary' id='resetSend'>SEND RESET LINK</button>");
- document.getElementById("resetSend").onclick=async()=>{
-  const email=document.getElementById("resetEmail").value.trim();if(!email)return toast("Enter your email.");
-  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
-  if(error)return toast(authErrorMessage(error));
-  openModal("Check your email","<p>If that email is registered, a password reset link has been sent.</p><button class='primary' id='resetDone'>OK</button>");
-  document.getElementById("resetDone").onclick=closeModal;
- };
 }
 async function openAccount(){
  if(!currentSession)return openAuth("login");
