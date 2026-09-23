@@ -236,7 +236,7 @@ async function loadForumOverview(){
  }));
  liveForums=out;renderForums(out);
 }
-function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+esc(f[0])+'</strong><small>'+esc(f[1])+'</small></span></div><div class="num">'+Number(f[2]).toLocaleString()+'</div><div class="num">'+Number(f[3]).toLocaleString()+'</div><div class="last"><strong>'+esc(f[4])+'</strong>by '+esc(f[5])+'<br>'+esc(f[6])+'</div></div>').join("")||'<div class="empty-topics">No forum categories available.</div>';document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)openForum(f)})}
+function renderForums(list){if(!rows)return;rows.innerHTML=list.map((f,i)=>'<div class="forum-row" data-i="'+i+'"><div class="forum-name"><span class="folder">□</span><span><strong>'+esc(f[0])+'</strong><small>'+esc(f[1])+'</small></span></div><div class="num">'+Number(f[2]).toLocaleString()+'</div><div class="num">'+Number(f[3]).toLocaleString()+'</div><div class="last"><strong>'+esc(f[4])+'</strong>by '+esc(f[5])+'<br>'+esc(f[6])+'</div></div>').join("")||'<div class="empty-topics">No forum categories available.</div>';document.querySelectorAll(".forum-row").forEach(r=>r.onclick=()=>{const name=r.querySelector(".forum-name strong")?.textContent;const f=forums.find(x=>x[0]===name);if(f)window.open("category.html?forum="+encodeURIComponent(f[0]),"_blank","noopener,noreferrer")})}
 const forumTopics={};
 let currentForum="Technology",currentForumRows=[],currentForumPage=1,currentForumPages=1,currentForumFilter="",currentForumType="all";
 const FORUM_PAGE_SIZE=10;
